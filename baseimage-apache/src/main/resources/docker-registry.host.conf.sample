@@ -1,0 +1,44 @@
+<VirtualHost _default_:80>
+   ServerName %HOST%
+   ServerAdmin %WEBMASTER_ADDRESS%
+   
+   DocumentRoot /var/www/%HOST%/html
+
+   ErrorLog ${APACHE_LOG_DIR}/error.log
+   CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+   RewriteEngine On
+
+#sslOnly#    RewriteCond %{HTTPS} off
+#sslOnly#    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+   ProxyPreserveHost On
+
+   ProxyPass "/v2" "http://%REGISTRY_HOST%:%REGISTRY_PORT%/v2"
+   ProxyPassReverse "/v2" "http://%REGISTRY_HOST%:%REGISTRY_PORT%/v2"
+
+   <Location /v2>
+      AuthType Basic
+      AuthName "%AUTH_DOMAIN%"
+      AuthBasicProvider file
+      AuthUserFile "/srv/apache2/docker-registry-users"
+      AuthGroupFile "/srv/apache2/docker-registry-groups"
+
+      <RequireAll>
+         Require valid-user
+         Require expr "!(%{HTTP_USER_AGENT} =~ m#^(docker/1\.(3|4|5(?!\.[0-9]-dev))|Go ).*$# )"
+         <RequireAny>
+            <RequireAll>
+               Require method GET OPTIONS HEAD
+            </RequireAll>
+            <RequireAll>
+               Require method POST PUT PATCH
+               Require group deployer
+            </RequireAll>
+         </RequireAny>
+      </RequireAll>
+
+      Header always set "Docker-Distribution-Api-Version" "registry/2.0"
+      Header onsuccess set "Docker-Distribution-Api-Version" "registry/2.0"
+   </Location>
+</VirtualHost>

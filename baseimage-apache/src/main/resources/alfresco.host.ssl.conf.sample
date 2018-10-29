@@ -1,0 +1,40 @@
+<IfModule mod_ssl.c>
+   <VirtualHost _default_:443>
+      ServerName %HOST%
+      ServerAdmin %WEBMASTER_ADDRESS%
+
+      DocumentRoot /var/www/%HOST%/html
+
+      ErrorLog ${APACHE_LOG_DIR}/error.ssl.log
+      CustomLog ${APACHE_LOG_DIR}/access.ssl.log combined
+
+      SSLEngine on
+      SSLCompression Off
+
+      SSLCertificateFile    %CERTIFICATE_FILE%
+      SSLCertificateKeyFile %CERTIFICATE_KEY%
+
+      Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains;"
+
+      RewriteEngine On
+      
+      RewriteRule    ^/share/(.*)/proxy/alfresco/api/solr/(.*)$   -   [F]
+      RewriteRule    ^/share/-default-/proxy/alfresco/api/(.*)$   -   [F]
+
+      RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
+
+      RewriteCond    %{REQUEST_METHOD}   ^GET$
+      RewriteRule    ^/$ https://%{HTTP_HOST}/share/   [R=301,L]
+
+      ProxyPreserveHost On
+
+      ProxyPassMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/$1"
+      ProxyPassReverse "/alfresco" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco"
+      ProxyPassReverse "/_vti_bin" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/_vti_bin"
+      
+      ProxyPass "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
+      ProxyPassReverse "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
+      
+      ProxyPassReverse "/" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/"
+   </VirtualHost>
+</IfModule>
