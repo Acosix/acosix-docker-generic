@@ -6,7 +6,14 @@ RUN wget -O /tmp/graalvm-ce-${graalvm.version}.tar.gz https://github.com/oracle/
    && mkdir -p /usr/lib/jvm  \
    && mv /graalvm-ce-${graalvm.version} /usr/lib/jvm/ \
    && rm /tmp/graalvm-ce-${graalvm.version}.tar.gz \
-   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/src.zip
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/src.zip \
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/jre/lib/*.src.zip \
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/jre/lib/boot/*.src.zip \
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/jre/lib/graalvm/*.src.zip \
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/jre/lib/jvmci/*.src.zip \
+   && rm /usr/lib/jvm/graalvm-ce-${graalvm.version}/jre/lib/truffle/*.src.zip
+
+# TODO Find more ways to strip it down, alternatively build from source with optimisation for size
    
 COPY graalvm-ce /tmp/
 
