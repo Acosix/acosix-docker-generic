@@ -18,23 +18,23 @@
 
       RewriteEngine On
       
-      RewriteRule    ^/share/(.*)/proxy/alfresco/api/solr/(.*)$   -   [F]
-      RewriteRule    ^/share/-default-/proxy/alfresco/api/(.*)$   -   [F]
-
       RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
 
       RewriteCond    %{REQUEST_METHOD}   ^GET$
-      RewriteRule    ^/$ https://%{HTTP_HOST}/share/   [R=301,L]
+      RewriteRule    ^/$ https://%{HTTP_HOST}/%CONTENT_APP_BASE_PATH%   [R=301,L]
 
       ProxyPreserveHost On
 
       ProxyPassMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/$1"
       ProxyPassReverse "/alfresco" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco"
       ProxyPassReverse "/_vti_bin" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/_vti_bin"
-      
-      ProxyPass "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
-      ProxyPassReverse "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
-      
+
+      ProxyPass "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+      ProxyPassReverse "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+
+      ProxyPass "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+      ProxyPassReverse "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+
       ProxyPassReverse "/" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/"
    </VirtualHost>
 </IfModule>

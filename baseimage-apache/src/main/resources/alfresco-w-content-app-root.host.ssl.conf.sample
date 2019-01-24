@@ -1,0 +1,34 @@
+<IfModule mod_ssl.c>
+   <VirtualHost _default_:443>
+      ServerName %HOST%
+      ServerAdmin %WEBMASTER_ADDRESS%
+
+      DocumentRoot /var/www/%HOST%/html
+
+      ErrorLog ${APACHE_LOG_DIR}/error.ssl.log
+      CustomLog ${APACHE_LOG_DIR}/access.ssl.log combined
+
+      SSLEngine on
+      SSLCompression Off
+
+      SSLCertificateFile    %CERTIFICATE_FILE%
+      SSLCertificateKeyFile %CERTIFICATE_KEY%
+
+      Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains;"
+
+      RewriteEngine On
+      
+      RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
+
+      ProxyPreserveHost On
+
+      ProxyPassMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/$1"
+      ProxyPassReverse "/alfresco" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco"
+      ProxyPassReverse "/_vti_bin" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/_vti_bin"
+
+      ProxyPass "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+      ProxyPassReverse "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+
+      ProxyPass "/" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+   </VirtualHost>
+</IfModule>
