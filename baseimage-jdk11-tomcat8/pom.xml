@@ -9,10 +9,11 @@
     </parent>
 
     <artifactId>baseimage-jdk11-tomcat8</artifactId>
+    <version>1.0.0</version>
 
     <properties>
         <docker.from.name>baseimage-jdk11</docker.from.name>
-        <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
+        <docker.from.version>1.0.0</docker.from.version>
 
         <dep.tomcat.version>8.5.37</dep.tomcat.version>
     </properties>

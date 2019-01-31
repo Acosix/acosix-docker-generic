@@ -8,12 +8,12 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>baseimage-jdk11</artifactId>
+    <artifactId>baseimage-ubuntu18.04</artifactId>
     <version>1.0.0</version>
 
     <properties>
-        <docker.from.name>baseimage-ubuntu18.04</docker.from.name>
-        <docker.from.version>1.0.0</docker.from.version>
+        <docker.pull>false</docker.pull>
+        <phusion.baseimage.version>0.11</phusion.baseimage.version>
     </properties>
 
     <build>

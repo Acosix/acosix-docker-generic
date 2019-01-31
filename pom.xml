@@ -17,11 +17,14 @@
 
     <modules>
         <module>baseimage</module>
+        <module>baseimage-ubuntu18.04</module>
         <module>baseimage-postgresql</module>
         <module>baseimage-graalvm</module>
         <module>baseimage-jdk8</module>
         <module>baseimage-graalvm-tomcat8</module>
         <module>baseimage-jdk8-tomcat8</module>
         <module>baseimage-apache</module>
+        <module>baseimage-jdk11</module>
+        <module>baseimage-jdk11-tomcat8</module>
     </modules>
 </project>
