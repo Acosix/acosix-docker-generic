@@ -19,9 +19,9 @@
         <module>baseimage</module>
         <module>baseimage-postgresql</module>
         <module>baseimage-graalvm</module>
-        <module>baseimage-jdk8</module>
+        <module>baseimage-openjdk8</module>
         <module>baseimage-graalvm-tomcat8</module>
-        <module>baseimage-jdk8-tomcat8</module>
+        <module>baseimage-openjdk8-tomcat8</module>
         <module>baseimage-apache</module>
     </modules>
 </project>

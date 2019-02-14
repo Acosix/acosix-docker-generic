@@ -11,7 +11,7 @@
     <artifactId>baseimage-graalvm</artifactId>
 
     <properties>
-        <graalvm.version>1.0.0-rc11</graalvm.version>
+        <graalvm.version>1.0.0-rc12</graalvm.version>
         <docker.from.name>baseimage</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
     </properties>

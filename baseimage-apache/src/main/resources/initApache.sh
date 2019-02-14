@@ -65,6 +65,28 @@ then
       sed -i "s/%HOST%/${PUBLIC_HOST}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
       sed -i "s/%WEBMASTER_ADDRESS%/${WEBMASTER_MAIL}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
    fi
+      
+   # otherwise for will also cut on whitespace
+   IFS=$'\n'
+   for i in `env`
+   do
+      if [[ $i == VHOST_* ]]
+      then
+         echo "Processing environment variable $i" > /proc/1/fd/1
+         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         value=`echo "$i" | cut -d '=' -f 2-`
+
+         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
+         then
+            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+         fi
+
+         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
+         then
+            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+         fi
+      fi
+   done
 
    if [ ! -f "/etc/apache2/sites-enabled/${PUBLIC_HOST}.conf" ]
    then
@@ -93,27 +115,6 @@ then
       then
          sed -i "s/#sslOnly#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
       fi
-      
-      # otherwise for will also cut on whitespace
-      IFS=$'\n'
-      for i in `env`
-      do
-         if [[ $i == VHOST_* ]]
-         then
-            key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-            value=`echo "$i" | cut -d '=' -f 2-`
-
-            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
-            then
-               sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
-            fi
-
-            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
-            then
-               sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
-            fi
-         fi
-      done
 
       if [[ $USE_LETSENCRYPT == true ]]
       then

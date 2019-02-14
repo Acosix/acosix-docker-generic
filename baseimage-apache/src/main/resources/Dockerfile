@@ -1,6 +1,9 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
-RUN add-apt-repository -y ppa:certbot/ubuntu/certbot \
+RUN apt-get update \
+   && apt-get install -y software-properties-common \
+   && add-apt-repository universe \
+   && add-apt-repository -y ppa:certbot/certbot \
    && install_clean \
       apache2 \
       certbot \
