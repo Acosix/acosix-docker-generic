@@ -8,11 +8,11 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>baseimage</artifactId>
+    <artifactId>baseimage-openjdk11</artifactId>
 
     <properties>
-        <docker.pull>false</docker.pull>
-        <phusion.baseimage.version>0.11</phusion.baseimage.version>
+        <docker.from.name>baseimage</docker.from.name>
+        <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
     </properties>
 
     <build>

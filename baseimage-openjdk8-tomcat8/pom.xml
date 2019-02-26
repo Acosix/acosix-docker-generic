@@ -13,8 +13,6 @@
     <properties>
         <docker.from.name>baseimage-openjdk8</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
-
-        <dep.tomcat.version>8.5.38</dep.tomcat.version>
     </properties>
 
     <build>
