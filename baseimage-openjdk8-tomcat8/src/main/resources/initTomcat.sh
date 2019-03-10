@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 DEBUG=${DEBUG:=false}
 ENABLED_PROXY=${ENABLE_PROXY:=true}

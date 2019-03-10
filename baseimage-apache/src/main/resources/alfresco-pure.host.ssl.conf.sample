@@ -21,7 +21,7 @@
       RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
 
       RewriteCond    %{REQUEST_METHOD}   ^GET$
-      RewriteRule    ^/$ https://%{HTTP_HOST}/alfresco/   [R=301,L]
+      RewriteRule    ^/$ https://%{HTTP_HOST}/alfresco/   [R=302,L]
 
       ProxyPreserveHost On
 

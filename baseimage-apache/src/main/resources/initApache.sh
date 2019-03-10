@@ -1,6 +1,24 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+file_env() {
+    local var="$1"
+    local fileVar="${var}_FILE"
+    local def="${2:-}"
+    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        exit 1
+    fi
+    local val="$def"
+    if [ "${!var:-}" ]; then
+        val="${!var}"
+    elif [ "${!fileVar:-}" ]; then
+        val="$(< "${!fileVar}")"
+    fi
+    unset "$fileVar"
+    echo "$val"
+}
 
 PUBLIC_HOST=${PUBLIC_HOST:=host.example.com}
 WEBMASTER_MAIL=${WEBMASTER_MAIL:=webmaster@host.example.com}
@@ -8,7 +26,7 @@ LETSENCRYPT_MAIL=${LETSENCRYPT_MAIL:=webmaster@host.example.com}
 
 REGENERATE_PREDEFINED_DHPARAMS=${REGENERATE_PREDEFINED_DHPARAMS:=false}
 
-BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:=''}
+BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:-}
 
 ENABLE_SSL=${ENABLE_SSL:=true}
 FORCE_SSL=${FORCE_SSL:=true}
@@ -200,6 +218,8 @@ then
       a2enmod ssl
       a2ensite ${PUBLIC_HOST}.ssl
    fi
+
+   chown -R www-data /var/www/html
 
    touch /var/lib/apache2/.initDone
 fi
