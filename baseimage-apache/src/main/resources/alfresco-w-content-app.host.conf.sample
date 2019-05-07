@@ -10,12 +10,12 @@
    RewriteEngine On
 
 #sslOnly#    RewriteCond %{HTTPS} off
-#sslOnly#    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+#sslOnly#    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
 
    RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
 
    RewriteCond    %{REQUEST_METHOD}   ^GET$
-   RewriteRule    ^/$ http://%{HTTP_HOST}/%CONTENT_APP_BASE_PATH%   [R=301,L]
+   RewriteRule    ^/$ http://%{HTTP_HOST}/%CONTENT_APP_BASE_PATH%   [R=302,L]
 
    ProxyPreserveHost On
 

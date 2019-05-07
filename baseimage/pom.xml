@@ -12,7 +12,7 @@
 
     <properties>
         <docker.pull>false</docker.pull>
-        <phusion.baseimage.version>0.10.2</phusion.baseimage.version>
+        <phusion.baseimage.version>0.11</phusion.baseimage.version>
     </properties>
 
     <build>

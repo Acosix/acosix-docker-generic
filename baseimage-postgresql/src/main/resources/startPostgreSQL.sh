@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-set -e
+set -euo pipefail
 
 PG_DATA=${PG_DATA:-/srv/postgresql/data}
 PG_VERSION="$(ls -A --ignore=.* /usr/lib/postgresql)"

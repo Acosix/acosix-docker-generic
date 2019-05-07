@@ -1,6 +1,24 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+file_env() {
+    local var="$1"
+    local fileVar="${var}_FILE"
+    local def="${2:-}"
+    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        exit 1
+    fi
+    local val="$def"
+    if [ "${!var:-}" ]; then
+        val="${!var}"
+    elif [ "${!fileVar:-}" ]; then
+        val="$(< "${!fileVar}")"
+    fi
+    unset "$fileVar"
+    echo "$val"
+}
 
 PUBLIC_HOST=${PUBLIC_HOST:=host.example.com}
 WEBMASTER_MAIL=${WEBMASTER_MAIL:=webmaster@host.example.com}
@@ -8,7 +26,7 @@ LETSENCRYPT_MAIL=${LETSENCRYPT_MAIL:=webmaster@host.example.com}
 
 REGENERATE_PREDEFINED_DHPARAMS=${REGENERATE_PREDEFINED_DHPARAMS:=false}
 
-BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:=''}
+BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:-}
 
 ENABLE_SSL=${ENABLE_SSL:=true}
 FORCE_SSL=${FORCE_SSL:=true}
@@ -65,6 +83,28 @@ then
       sed -i "s/%HOST%/${PUBLIC_HOST}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
       sed -i "s/%WEBMASTER_ADDRESS%/${WEBMASTER_MAIL}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
    fi
+      
+   # otherwise for will also cut on whitespace
+   IFS=$'\n'
+   for i in `env`
+   do
+      if [[ $i == VHOST_* ]]
+      then
+         echo "Processing environment variable $i" > /proc/1/fd/1
+         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         value=`echo "$i" | cut -d '=' -f 2-`
+
+         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
+         then
+            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+         fi
+
+         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
+         then
+            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+         fi
+      fi
+   done
 
    if [ ! -f "/etc/apache2/sites-enabled/${PUBLIC_HOST}.conf" ]
    then
@@ -93,27 +133,6 @@ then
       then
          sed -i "s/#sslOnly#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
       fi
-      
-      # otherwise for will also cut on whitespace
-      IFS=$'\n'
-      for i in `env`
-      do
-         if [[ $i == VHOST_* ]]
-         then
-            key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-            value=`echo "$i" | cut -d '=' -f 2-`
-
-            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
-            then
-               sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
-            fi
-
-            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
-            then
-               sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
-            fi
-         fi
-      done
 
       if [[ $USE_LETSENCRYPT == true ]]
       then
@@ -199,6 +218,8 @@ then
       a2enmod ssl
       a2ensite ${PUBLIC_HOST}.ssl
    fi
+
+   chown -R www-data /var/www/html
 
    touch /var/lib/apache2/.initDone
 fi

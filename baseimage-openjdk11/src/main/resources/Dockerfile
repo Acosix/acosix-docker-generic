@@ -1,7 +1,7 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
-# Add tools that are commonly used in sub-images
-RUN install_clean openjdk-8-jdk-headless
+# Headless JDK without src should be the smallest possible
+RUN install_clean openjdk-11-jdk-headless
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

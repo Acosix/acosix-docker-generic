@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # Latest Tomcat8 in Ubuntu 16.04 repositories is 8.0.32 which has an annoying bug
 # https://bz.apache.org/bugzilla/show_bug.cgi?id=58999
@@ -38,8 +38,8 @@ RUN wget -O /tmp/tomcat.tar.gz http://www-eu.apache.org/dist/tomcat/tomcat-8/v${
    && cd / \
    && rm -rf "$nativeBuildDir" \
    && rm /usr/share/tomcat8/bin/tomcat-native.tar.gz \
-   && groupadd tomcat8 \
-   && useradd -s /bin/false -g tomcat8 -M tomcat8 \
+   && groupadd -g 12000 tomcat8 \
+   && useradd -s /bin/false -b /var/lib/tomcat8 -g tomcat8 -u 12000 -M tomcat8 \
    && chown -R tomcat8:tomcat8 /var/lib/tomcat8 /var/log/tomcat8 /var/cache/tomcat8 /usr/share/tomcat8 /etc/tomcat8 \
    && mv /tmp/tomcat8-defaults /etc/default/tomcat8 \
    && apt-get autoremove -q -y \

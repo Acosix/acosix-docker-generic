@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # Download and setup GraalVM Community (trimming it down somewhat since it is huuge)
 RUN wget -O /tmp/graalvm-ce-${graalvm.version}.tar.gz https://github.com/oracle/graal/releases/download/vm-${graalvm.version}/graalvm-ce-${graalvm.version}-linux-amd64.tar.gz \

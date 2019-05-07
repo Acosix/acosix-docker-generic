@@ -1,12 +1,31 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+file_env() {
+    local var="$1"
+    local fileVar="${var}_FILE"
+    local def="${2:-}"
+    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        exit 1
+    fi
+    local val="$def"
+    if [ "${!var:-}" ]; then
+        val="${!var}"
+    elif [ "${!fileVar:-}" ]; then
+        val="$(< "${!fileVar}")"
+    fi
+    unset "$fileVar"
+    echo "$val"
+}
 
 PG_DATA=${PG_DATA:-/srv/postgresql/data}
-PG_INIT_SCRIPTS=${PG_DATA:-/srv/postgresql/init}
+PG_INIT_SCRIPTS=${PG_INIT_SCRIPTS:-/srv/postgresql/init}
 
 PG_USER=${PG_USER:-postgres}
 PG_DB=${PG_USER:=${PG_USER}}
+PG_PASS=$(file_env PG_PASS)
 
 PG_VERSION="$(ls -A --ignore=.* /usr/lib/postgresql)"
 
@@ -66,16 +85,14 @@ then
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -jE -D ${PG_DATA}"
       fi
 
-      if [[ -z "$(ls -A "${PG_INIT_SCRIPTS}")" ]]
+      if [[ -n "$(ls -A "${PG_INIT_SCRIPTS}")" ]]
       then
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -l /var/log/postgresql/postgresql-${PG_VERSION}-main.log -o \"-c listen_addresses=''\" -w start"
 
          echo "Running any database initialisation scripts"
-         for file in ${PG_INIT_SCRIPTS}
+         for script in ${PG_INIT_SCRIPTS}/*.sql
          do
-            case "$file" in
-               *.sql) "/usr/lib/postgresql/${PG_VERSION}/bin/psql" --username "${PG_USER}" --dbname "${PG_DB}" < "${file}"
-               esac
+            "/usr/lib/postgresql/${PG_VERSION}/bin/psql" --username "${PG_USER}" --dbname "${PG_DB}" < "$script"
          done
 
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -m fast -w stop"
