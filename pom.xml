@@ -12,12 +12,11 @@
     <packaging>pom</packaging>
 
     <properties>
-        <dep.tomcat.version>8.5.38</dep.tomcat.version>
+        <dep.tomcat.version>8.5.40</dep.tomcat.version>
     </properties>
 
     <modules>
         <module>baseimage</module>
-        <module>baseimage-ubuntu18.04</module>
         <module>baseimage-postgresql</module>
         <module>baseimage-graalvm</module>
         <module>baseimage-openjdk8</module>
@@ -26,7 +25,5 @@
         <module>baseimage-openjdk8-tomcat8</module>
         <module>baseimage-openjdk11-tomcat8</module>
         <module>baseimage-apache</module>
-        <module>baseimage-jdk11</module>
-        <module>baseimage-jdk11-tomcat8</module>
     </modules>
 </project>
