@@ -25,5 +25,6 @@
         <module>baseimage-openjdk8-tomcat8</module>
         <module>baseimage-openjdk11-tomcat8</module>
         <module>baseimage-apache</module>
+        <module>baseimage-postfix</module>
     </modules>
 </project>
