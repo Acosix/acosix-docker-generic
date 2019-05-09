@@ -7,7 +7,7 @@ file_env() {
     local fileVar="${var}_FILE"
     local def="${2:-}"
     if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        echo >&2 "Both $var and $fileVar are set (but are exclusive)"
         exit 1
     fi
     local val="$def"
@@ -93,6 +93,8 @@ then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
+         # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
+         value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
 
          if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
          then
@@ -150,13 +152,13 @@ then
                KEY_NUMBER=$(echo "${keyFile}" | sed -r 's/^.+\/privkey([0-9]*)\.pem$/\1/')
                if [ -n ${KEY_NUMBER} ]
                then
-                  echo "Checking externally stored Let's Encrypt key files with number ${KEY_NUMBER}"
+                  echo "Checking externally stored Let's Encrypt key files with number ${KEY_NUMBER}" > /proc/1/fd/1
 
                   if [[ "${KEY_NUMBER}" -gt "${MOST_RECENT_KEY_NUMBER}" ]]
                   then
                      if [[ -f "/srv/apache2/ssl/certs/fullchain${KEY_NUMBER}.pem" && -f "/srv/apache2/ssl/certs/chain${KEY_NUMBER}.pem" && -f "/srv/apache2/ssl/certs/cert${KEY_NUMBER}.pem" ]]
                      then
-                        echo "Externally stored Let's Encrypt key files with number ${KEY_NUMBER} form a complete set of cert, cert chains and private key"
+                        echo "Externally stored Let's Encrypt key files with number ${KEY_NUMBER} form a complete set of cert, cert chains and private key" > /proc/1/fd/1
                         MOST_RECENT_KEY_NUMBER=$KEY_NUMBER
                      fi
                   fi
@@ -169,12 +171,12 @@ then
             LE_ACCOUNT_EXISTS=true
             LE_ACCOUNT_ID=$(grep account /srv/apache2/ssl/letsencrypt/${PUBLIC_HOST}.conf | sed -r 's/account = (.+)/\1/')
             LE_ACCOUNT_API=$(less /srv/apache2/ssl/letsencrypt/regr.json | sed -r 's/.+"uri": "https:\/\/([^\/]+\.letsencrypt\.org)[^"]+".+/\1/')
-            echo "Found Let's Encrypt account ${LE_ACCOUNT_ID} for API ${LE_ACCOUNT_API}"
+            echo "Found Let's Encrypt account ${LE_ACCOUNT_ID} for API ${LE_ACCOUNT_API}" > /proc/1/fd/1
          fi
 
          if [[ "${MOST_RECENT_KEY_NUMBER}" -gt "-1" && $LE_ACCOUNT_EXISTS ]]
          then
-            echo "Mapping externally stored Let's Encrypt key and config files for continued use for ${PUBLIC_HOST}"
+            echo "Mapping externally stored Let's Encrypt key and config files for continued use for ${PUBLIC_HOST}" > /proc/1/fd/1
             mkdir -p /etc/letsencrypt/accounts/${LE_ACCOUNT_API}/directory/${LE_ACCOUNT_ID}
             mkdir -p /etc/letsencrypt/renewal
             mkdir -p /etc/letsencrypt/archive
@@ -185,7 +187,7 @@ then
             ln -s ../../archive/${PUBLIC_HOST}/fullchain${MOST_RECENT_KEY_NUMBER}.pem /etc/letsencrypt/live/${PUBLIC_HOST}/fullchain.pem
             ln -s ../../archive/${PUBLIC_HOST}/cert${MOST_RECENT_KEY_NUMBER}.pem /etc/letsencrypt/live/${PUBLIC_HOST}/cert.pem
          else
-            echo "Generating a new Let's Encrypt certificate for ${PUBLIC_HOST}"
+            echo "Generating a new Let's Encrypt certificate for ${PUBLIC_HOST}" > /proc/1/fd/1
             /usr/sbin/apache2ctl -k start
             certbot --apache --agree-tos -n -m ${LETSENCRYPT_MAIL} -d ${PUBLIC_HOST} certonly
             /usr/sbin/apache2ctl -k stop

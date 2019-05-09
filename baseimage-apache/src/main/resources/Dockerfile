@@ -33,9 +33,18 @@ RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:
 
 RUN a2enmod \
       authz_groupfile \
+      http2 \
       proxy \
+      proxy_ajp \
       proxy_http \
+      proxy_http2 \
       proxy_html \
+      proxy_hcheck \
+      proxy_balancer \
+      lbmethod_bybusyness \
+      lbmethod_byrequests \
+      lbmethod_bytraffic \
+      lbmethod_heartbeat \
       xml2enc \
       expires \
       cache \

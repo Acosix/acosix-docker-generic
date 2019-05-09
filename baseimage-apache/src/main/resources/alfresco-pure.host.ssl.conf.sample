@@ -15,6 +15,9 @@
       SSLCertificateKeyFile %CERTIFICATE_KEY%
 
       Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains;"
+      
+      RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
+      RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
 
       RewriteEngine On
 

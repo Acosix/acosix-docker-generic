@@ -16,6 +16,9 @@
 
       Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains;"
 
+      RequestHeader set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}
+      RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
+
       ProxyPreserveHost On
 
       ProxyPass "/v2" "http://%REGISTRY_HOST%:%REGISTRY_PORT%/v2"
