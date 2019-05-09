@@ -12,7 +12,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <dep.tomcat.version>8.5.38</dep.tomcat.version>
+        <dep.tomcat.version>8.5.40</dep.tomcat.version>
     </properties>
 
     <modules>
