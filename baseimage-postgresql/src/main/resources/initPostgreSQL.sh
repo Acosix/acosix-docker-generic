@@ -7,7 +7,7 @@ file_env() {
     local fileVar="${var}_FILE"
     local def="${2:-}"
     if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-        echo >&2 "error: both $var and $fileVar are set (but are exclusive)"
+        echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
         exit 1
     fi
     local val="$def"
@@ -23,6 +23,7 @@ file_env() {
 PG_DATA=${PG_DATA:-/srv/postgresql/data}
 PG_INIT_SCRIPTS=${PG_INIT_SCRIPTS:-/srv/postgresql/init}
 
+# these are only for the root / main admin user
 PG_USER=${PG_USER:-postgres}
 PG_DB=${PG_USER:=${PG_USER}}
 PG_PASS=$(file_env PG_PASS)
@@ -34,11 +35,12 @@ then
 
    echo -e "source s_postgreqsl { file("/var/log/postgresql/postgresql-${PG_VERSION}-main.log" follow-freq(1)); };\nlog { source(s_postgreqsl); destination(d_stdout); };" > /etc/syslog-ng/conf.d/postgresql-ng.conf
 
+   IFS=$'\n'
    for i in `env`
-    do
-        if [[ $i == PGCONF_* ]]
+   do
+      if [[ $i == PGCONF_* ]]
       then
-            key=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         key=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo $i | cut -d '=' -f 2-`
          
          if grep --quiet "^${key}\s*=" "/etc/postgresql/${PG_VERSION}/main/postgresql.conf"; then
@@ -46,21 +48,21 @@ then
          else
             echo "${key}=${value}" >> "/etc/postgresql/${PG_VERSION}/main/postgresql.conf"
          fi
-        fi
-    done
+      fi
+   done
    
    if [[ ! -d "${PG_DATA}" ]]
    then
-      mkdir -p "${PG_DATA}"
-      chown -R postgres:postgres "${PG_DATA}"
-      chmod 0700 "${PG_DATA}"
+      mkdir -p $PG_DATA
    fi
+   chown -R postgres:postgres $PG_DATA
+   chmod 0700 $PG_DATA
    
    if [[ -z "$(ls -A "${PG_DATA}")" ]]
    then
       su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/initdb -D ${PG_DATA}"
    
-      if [[ "${PG_PASS}" ]]
+      if [[ ! -z "${PG_PASS}" ]]
       then
          PASS="PASSWORD '${PG_PASS}'"
          AUTH=md5
@@ -70,26 +72,160 @@ then
       fi
 
       if [ "${PG_USER}" != 'postgres' ]; then
-         echo "Creating user ${PG_USER}"
+         echo "Creating user ${PG_USER}" > /proc/1/fd/1
          USER_OP=CREATE
       else
-         echo "Altering user ${PG_USER} (password)"
+         echo "Altering user ${PG_USER} (password)" > /proc/1/fd/1
          USER_OP=ALTER
       fi
       USER_SQL="${USER_OP} USER ${PG_USER} WITH SUPERUSER ${PASS};"
-      echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -jE -D ${PG_DATA}"
+      echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
 
       if [ "${PG_DB}" != 'postgres' ]; then
-         echo "Creating database ${PG_DB}"
+         echo "Creating database ${PG_DB}" > /proc/1/fd/1
          CREATE_SQL="CREATE DATABASE ${PG_DB} ENCODING = 'UTF8' OWNER = ${PG_USER};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -jE -D ${PG_DATA}"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+         CREATE_SQL="CREATE SCHEMA ${PG_DB};"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}"
+         CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB};"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+
+         echo "host ${PG_DB} ${PG_USER} 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+         echo "host ${PG_DB} ${PG_USER} ::0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+
+      elif [ "${PG_USER}" != 'postgres' ]; then
+
+         echo "host all ${PG_USER} 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+         echo "host all ${PG_USER} ::0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+
       fi
 
+      if [ "${PG_USER}" = 'postgres' ]; then
+         echo "host all postgres 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+         echo "host all postgres ::0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
+      fi
+
+      # 1st loop: create users
+      IFS=$'\n'
+      for i in `env`
+      do
+         if [[ $i == PG_USER_* ]]
+         then
+            user=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            pass=$(file_env "PG_PASS_${user}")
+
+            echo "Creating user ${user}" > /proc/1/fd/1
+
+            USER_SQL="CREATE USER ${user} NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD '${pass}';"
+            echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+         fi
+      done
+
+      # 2nd loop: create databases
+      IFS=$'\n'
+      for i in `env`
+      do
+         if [[ $i == PG_DB_* ]]
+         then
+            db=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            owner=`echo "$i" | cut -d '=' -f 2-`
+
+            echo "Creating database ${db}" > /proc/1/fd/1
+
+            CREATE_SQL="CREATE DATABASE ${db} ENCODING = 'UTF8'"
+            if [[ ! -z "${owner}" ]]
+            then
+               CREATE_SQL="${CREATE_SQL} OWNER = ${owner};"
+            else
+               CREATE_SQL="${CREATE_SQL};"
+            fi
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+            CREATE_SQL="CREATE SCHEMA ${db};"
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+            CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db};"
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+
+            if [ "${owner}" != 'postgres' -a "${owner}" != "${PG_USER}" ]; then
+
+               echo "Setting up client access for owner ${user} to ${db}" > /proc/1/fd/1
+
+               echo "host ${db} ${owner} 0.0.0.0/0 md5" >> "${PG_DATA}/pg_hba.conf"
+               echo "host ${db} ${owner} ::0/0 md5" >> "${PG_DATA}/pg_hba.conf"
+            fi
+         fi
+      done
+
+      # 3rd loop: setup client access control for users
+      IFS=$'\n'
+      for i in `env`
+      do
+         if [[ $i == PG_USER_* ]]
+         then
+            user=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            dbs=`echo "$i" | cut -d '=' -f 2-`
+
+            if [[ ! -z "${dbs}" ]]
+            then
+               echo "Setting up client access for ${user} to ${dbs}" > /proc/1/fd/1
+
+               IFS=$','
+               for db in ${dbs}
+               do
+                  echo "host ${db} ${user} 0.0.0.0/0 md5" >> "${PG_DATA}/pg_hba.conf"
+                  echo "host ${db} ${user} ::0/0 md5" >> "${PG_DATA}/pg_hba.conf"
+               done
+            fi
+            IFS=$'\n'
+         fi
+      done
+
+      # 4th loop: user-db privileges
+      IFS=$'\n'
+      for i in `env`
+      do
+         if [[ $i == PG_PRIVILEGE_* ]]
+         then
+            user=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            db=`echo "$i" | cut -d '=' -f 2- | cut -d ':' -f 1`
+            mode=`echo "$i" | cut -d '=' -f 2- | cut -d ':' -f 2-`
+
+            echo "Setting up access privilege for user ${user} to ${db} in mode ${mode}" > /proc/1/fd/1
+
+            if [ "${mode}" = 'read' ]; then
+               GRANT_SQL="GRANT CONNECT ON DATABASE ${db} TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+               GRANT_SQL="GRANT USAGE ON SCHEMA ${db} TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="GRANT SELECT ON ALL SEQUENCES IN SCHEMA ${db} TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="GRANT SELECT ON ALL TABLES IN SCHEMA ${db} TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+
+            elif [ "${mode}" = 'full' -o "${mode}" = 'write' ]; then
+
+               GRANT_OPT=""
+               if [ "${mode}" = 'full' ]; then
+                  GRANT_OPT=" WITH GRANT OPTION"
+               fi
+
+               GRANT_SQL="GRANT ALL ON DATABASE ${db} TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+               GRANT_SQL="GRANT ALL ON SCHEMA ${db} TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="GRANT ALL ON ALL SEQUENCES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="GRANT ALL ON ALL TABLES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+            fi
+         fi
+      done
+
+      mkdir -p ${PG_INIT_SCRIPTS}
       if [[ -n "$(ls -A "${PG_INIT_SCRIPTS}")" ]]
       then
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -l /var/log/postgresql/postgresql-${PG_VERSION}-main.log -o \"-c listen_addresses=''\" -w start"
 
-         echo "Running any database initialisation scripts"
+         echo "Running any database initialisation scripts" > /proc/1/fd/1
          for script in ${PG_INIT_SCRIPTS}/*.sql
          do
             "/usr/lib/postgresql/${PG_VERSION}/bin/psql" --username "${PG_USER}" --dbname "${PG_DB}" < "$script"
@@ -97,9 +233,6 @@ then
 
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -m fast -w stop"
       fi
-
-      echo "host all all 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
-      echo "host all all ::0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
    fi
 
    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "${PG_DATA}/postgresql.conf"
