@@ -33,7 +33,7 @@ fi
 
 # The following variables can be overwritten in $DEFAULT
 
-# Run Tomcat 7 as this user ID and group ID
+# Run Tomcat 8 as this user ID and group ID
 tomcat8_USER=tomcat8
 tomcat8_GROUP=tomcat8
 
