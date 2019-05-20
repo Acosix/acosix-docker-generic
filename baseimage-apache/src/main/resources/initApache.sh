@@ -93,17 +93,26 @@ then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
-         # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-         value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+         # support secrets mounted via files
+         if [[ $key == *-FILE ]]
+         then
+            value="$(< "${value}")"
+            key=`echo "$key" | sed -r 's/-FILE$//'`
+         fi
+
+         # escape potential special characters in key / value (. and / for dot-separated keys or path values)
+         regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+         replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
 
          if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
          then
-            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+            sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
          fi
 
          if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
          then
-            sed -i "s/%${key}%/${value}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+            sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
          fi
       fi
    done
