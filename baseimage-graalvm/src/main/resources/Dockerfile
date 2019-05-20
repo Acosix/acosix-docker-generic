@@ -1,7 +1,7 @@
 FROM ${docker.from.id}:${docker.from.version}
 
 # Download and setup GraalVM Community (trimming it down somewhat since it is huuge)
-RUN wget -O /tmp/graalvm-ce-${graalvm.version}.tar.gz https://github.com/oracle/graal/releases/download/vm-${graalvm.version}/graalvm-ce-${graalvm.version}-linux-amd64.tar.gz \
+RUN wget -O /tmp/graalvm-ce-${graalvm.version}.tar.gz https://github.com/oracle/graal/releases/download/vm-${graalvm.version}/graalvm-ce-linux-amd64-${graalvm.version}.tar.gz \
    && bsdtar xzf /tmp/graalvm-ce-${graalvm.version}.tar.gz \
    && mkdir -p /usr/lib/jvm  \
    && mv /graalvm-ce-${graalvm.version} /usr/lib/jvm/ \
