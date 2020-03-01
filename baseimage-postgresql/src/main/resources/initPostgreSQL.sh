@@ -20,6 +20,23 @@ file_env() {
     echo "$val"
 }
 
+setInConfigFile() {
+   local fileName="$1"
+   local key="$2"
+   local value="${3:=''}"
+
+   # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
+      sed -i "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   else
+      echo "${key}=${value}" >> ${fileName}
+   fi
+}
+
 PG_DATA=${PG_DATA:-/srv/postgresql/data}
 PG_INIT_SCRIPTS=${PG_INIT_SCRIPTS:-/srv/postgresql/init}
 
@@ -42,12 +59,8 @@ then
       then
          key=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo $i | cut -d '=' -f 2-`
-         
-         if grep --quiet "^${key}\s*=" "/etc/postgresql/${PG_VERSION}/main/postgresql.conf"; then
-            sed -i "s/^${key}\s*=.*/${key}=${value}/" "/etc/postgresql/${PG_VERSION}/main/postgresql.conf"
-         else
-            echo "${key}=${value}" >> "/etc/postgresql/${PG_VERSION}/main/postgresql.conf"
-         fi
+
+         setInConfigFile "/etc/postgresql/${PG_VERSION}/main/postgresql.conf" ${key} ${value}
       fi
    done
    
@@ -85,7 +98,7 @@ then
          echo "Creating database ${PG_DB}" > /proc/1/fd/1
          CREATE_SQL="CREATE DATABASE ${PG_DB} ENCODING = 'UTF8' OWNER = ${PG_USER};"
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
-         CREATE_SQL="CREATE SCHEMA ${PG_DB};"
+         CREATE_SQL="CREATE SCHEMA ${PG_DB} AUTHORIZATION ${PG_USER};"
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}"
          CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB};"
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
@@ -140,7 +153,13 @@ then
                CREATE_SQL="${CREATE_SQL};"
             fi
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
-            CREATE_SQL="CREATE SCHEMA ${db};"
+            CREATE_SQL="CREATE SCHEMA ${db}"
+            if [[ ! -z "${owner}" ]]
+            then
+               CREATE_SQL="${CREATE_SQL} AUTHORIZATION ${owner};"
+            else
+               CREATE_SQL="${CREATE_SQL};"
+            fi
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
             CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db};"
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
@@ -232,7 +251,7 @@ then
          done
 
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -m fast -w stop"
-      fi
+      fi 
    fi
 
    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "${PG_DATA}/postgresql.conf"
