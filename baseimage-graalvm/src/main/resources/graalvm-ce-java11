@@ -1,0 +1,7 @@
+Standards-Version: 3.9.2
+Package: graalvm-ce-java11
+Version: ${graalvm.version}
+Section: java
+Priority: optional
+Provides: java2-runtime-headless, java5-runtime-headless, java6-runtime-headless, java7-runtime-headless, java8-runtime-headless, java9-runtime-headless, java10-runtime-headless, java11-runtime-headless
+Description: Dummy package for the Oracle GraalVM Community Edition

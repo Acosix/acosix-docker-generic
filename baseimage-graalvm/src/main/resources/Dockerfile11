@@ -1,0 +1,51 @@
+FROM ${docker.from.id}:${docker.from.version}
+
+ARG jvmVersion=8
+
+# Download and setup GraalVM Community (trimming it down somewhat since it is huuge)
+RUN wget -O /tmp/graalvm-ce-java11-${graalvm.version}.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm.version}/graalvm-ce-java11-linux-amd64-${graalvm.version}.tar.gz \
+   && bsdtar xzf /tmp/graalvm-ce-java11-${graalvm.version}.tar.gz \
+   && mkdir -p /usr/lib/jvm  \
+   && mv /graalvm-ce-java11-${graalvm.version} /usr/lib/jvm/ \
+   && rm /tmp/graalvm-ce-java11-${graalvm.version}.tar.gz \
+   && find /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/ -iname src.zip -delete \
+   && find /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/ -iname *.src.zip -delete
+
+# TODO Find more ways to strip it down, alternatively build from source with optimisation for size
+   
+COPY graalvm-ce-java11 /tmp/
+
+RUN install_clean \
+      equivs \
+      gcc \
+      zlib1g-dev \
+   && equivs-build /tmp/graalvm-ce-java11 \
+   && dpkg -i /graalvm-ce-java11_${graalvm.version}_all.deb \
+   && apt-get autoremove -q -y equivs \
+   && rm /graalvm-ce-java11_${graalvm.version}_all.deb \
+   && rm /tmp/graalvm-ce-java11
+
+# Only the most commonly used executables are added to the alternatives system
+# no manpage files in java11 build + slightly different binary paths than for java8
+RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/java 100 \
+   && update-alternatives --install /usr/bin/jjs jjs /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jjs 100 \
+   && update-alternatives --install /usr/bin/js js /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/js 100 \
+   && update-alternatives --install /usr/bin/node node /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/node 100 \
+   && update-alternatives --install /usr/bin/npm npm /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/npm 100 \
+   && update-alternatives --install /usr/bin/polyglot polyglot /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/polyglot 100 \
+   && update-alternatives --install /usr/bin/keytool keytool /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/keytool 100 \
+   && update-alternatives --install /usr/bin/rmid rmid /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/rmid 100 \
+   && update-alternatives --install /usr/bin/rmiregistry rmiregistry /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/rmiregistry 100 \
+   && update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/javac 100 \
+   && update-alternatives --install /usr/bin/javap javap /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/javap 100 \
+   && update-alternatives --install /usr/bin/jstack jstack /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jstack 100 \
+   && update-alternatives --install /usr/bin/jmap jmap /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jmap 100 \
+   && update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jar 100 \
+   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/javadoc 100
+
+LABEL vendor="${docker.labels.vendor}" \
+   ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
+   ${docker.labels.namespace}.is-beta="" \
+   ${docker.labels.namespace}.is-production="" \
+   ${docker.labels.namespace}.release-date="${docker.labels.release-date}" \
+   ${docker.labels.namespace}.maintainer="${docker.labels.maintainer}"

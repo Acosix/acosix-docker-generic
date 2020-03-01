@@ -8,7 +8,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>baseimage-graalvm</artifactId>
+    <artifactId>baseimage-openjdk</artifactId>
 
     <properties>
         <docker.from.name>baseimage</docker.from.name>
@@ -33,19 +33,17 @@
                         <images>
                         <!-- actually build two variant images with different Java versions -->
                             <image>
-                                <name>${docker.image.id}-java8</name>
+                                <name>${docker.image.id}8</name>
                                 <build>
-                                    <dockerFile>Dockerfile8</dockerFile>
                                     <args>
                                         <jvmVersion>8</jvmVersion>
                                     </args>
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}-java11</name>
+                                <name>${docker.image.id}11</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
-                                    <dockerFile>Dockerfile11</dockerFile>
                                     <args>
                                         <jvmVersion>11</jvmVersion>
                                     </args>

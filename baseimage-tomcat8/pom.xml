@@ -8,7 +8,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>baseimage-graalvm</artifactId>
+    <artifactId>baseimage-tomcat8</artifactId>
 
     <properties>
         <docker.from.name>baseimage</docker.from.name>
@@ -31,23 +31,51 @@
                     <artifactId>docker-maven-plugin</artifactId>
                     <configuration>
                         <images>
-                        <!-- actually build two variant images with different Java versions -->
+                        <!-- actually build four variant images with different Java versions -->
                             <image>
-                                <name>${docker.image.id}-java8</name>
+                                <name>${docker.image.id}-openjdk8</name>
                                 <build>
-                                    <dockerFile>Dockerfile8</dockerFile>
+                                    <dockerFile>Dockerfile-openjdk8</dockerFile>
                                     <args>
-                                        <jvmVersion>8</jvmVersion>
+                                        <baseImageNameSuffix>-openjdk8</baseImageNameSuffix>
                                     </args>
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}-java11</name>
+                                <name>${docker.image.id}-openjdk11</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
-                                    <dockerFile>Dockerfile11</dockerFile>
+                                    <dockerFile>Dockerfile-openjdk11</dockerFile>
                                     <args>
-                                        <jvmVersion>11</jvmVersion>
+                                        <baseImageNameSuffix>-openjdk11</baseImageNameSuffix>
+                                    </args>
+                                    <tags>
+                                        <tag>latest</tag>
+                                        <tag>${project.version}</tag>
+                                    </tags>
+                                </build>
+                            </image>
+                            <image>
+                                <name>${docker.image.id}-graalvm-java8</name>
+                                <build>
+                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
+                                    <dockerFile>Dockerfile-graalvm8</dockerFile>
+                                    <args>
+                                        <baseImageNameSuffix>-graalvm-java8</baseImageNameSuffix>
+                                    </args>
+                                    <tags>
+                                        <tag>latest</tag>
+                                        <tag>${project.version}</tag>
+                                    </tags>
+                                </build>
+                            </image>
+                            <image>
+                                <name>${docker.image.id}-graalvm-java11</name>
+                                <build>
+                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
+                                    <dockerFile>Dockerfile-graalvm11</dockerFile>
+                                    <args>
+                                        <baseImageNameSuffix>-graalvm-java11</baseImageNameSuffix>
                                     </args>
                                     <tags>
                                         <tag>latest</tag>
