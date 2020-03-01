@@ -94,25 +94,45 @@ then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
 
-         # support secrets mounted via files
-         if [[ $key == *-FILE ]]
+         if [[ $key == ENABLE_* ]]
          then
-            value="$(< "${value}")"
-            key=`echo "$key" | sed -r 's/-FILE$//'`
-         fi
+            key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            if [[ $value == true ]]
+            then
+               echo "Enabling any vhost configuration with comment flag $key" > /proc/1/fd/1
 
-         # escape potential special characters in key / value (. and / for dot-separated keys or path values)
-         regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-         replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+               regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`               
+               if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
+               then
+                  sed -i "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+               fi
 
-         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
-         then
-            sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
-         fi
+               if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
+               then
+                  sed -i "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+               fi
+            fi
+         else
+            # support secrets mounted via files
+            if [[ $key == *-FILE ]]
+            then
+               value="$(< "${value}")"
+               key=`echo "$key" | sed -r 's/-FILE$//'`
+            fi
 
-         if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
-         then
-            sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+            # escape potential special characters in key / value (. and / for dot-separated keys or path values)
+            regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+            replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
+            then
+               sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+            fi
+
+            if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
+            then
+               sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+            fi
          fi
       fi
    done
@@ -143,6 +163,7 @@ then
       if [[ $FORCE_SSL == true ]]
       then
          sed -i "s/#sslOnly#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+         sed -i "s/#sslOnly#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
       fi
 
       if [[ $USE_LETSENCRYPT == true ]]
@@ -197,7 +218,7 @@ then
             ln -s ../../archive/${PUBLIC_HOST}/cert${MOST_RECENT_KEY_NUMBER}.pem /etc/letsencrypt/live/${PUBLIC_HOST}/cert.pem
          else
             echo "Generating a new Let's Encrypt certificate for ${PUBLIC_HOST}" > /proc/1/fd/1
-            /usr/sbin/apache2ctl -k start
+            /usr/sbin/apache2ctl -k restart
             certbot --apache --agree-tos -n -m ${LETSENCRYPT_MAIL} -d ${PUBLIC_HOST} certonly
             /usr/sbin/apache2ctl -k stop
 

@@ -19,7 +19,7 @@ RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:
    && sed -i 's/#SSLHonorCipherOrder on/SSLHonorCipherOrder on/' /etc/apache2/mods-available/ssl.conf \
    && sed -i 's/SSLProtocol all -SSLv3/SSLProtocol all -SSLv3 -TLSv1/' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLUseStapling On' /etc/apache2/mods-available/ssl.conf \
-   && sed -i '/<\/IfModule>/i    SSLStaplingCache "shmcb:${APACHE_RUN_DIR}/ssl_stapling(32768)"' /etc/apache2/mods-available/ssl.conf \
+   && sed -i '/<\/IfModule>/i    SSLStaplingCache shmcb:${APACHE_RUN_DIR}/ssl_stapling(32768)' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLOpenSSLConfCmd DHParameters "/etc/ssl/certs/dhparam.pem"' /etc/apache2/mods-available/ssl.conf \
    && rm -f /etc/apache2/sites-available/localhost*.conf* \
    && mkdir -p /etc/my_init.d \

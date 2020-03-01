@@ -1,0 +1,45 @@
+<VirtualHost _default_:80>
+   ServerName %HOST%
+   ServerAdmin %WEBMASTER_ADDRESS%
+   
+   DocumentRoot /var/www/%HOST%/html
+
+   ErrorLog ${APACHE_LOG_DIR}/error.log
+   CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+   RewriteEngine On
+
+#sslOnly#    RewriteCond %{HTTPS} off
+#sslOnly#    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
+
+#AlfrescoShare#   RewriteRule    ^/share/(.*)/proxy/alfresco/api/solr/(.*)$   -   [F]
+#AlfrescoShare#   RewriteRule    ^/share/-default-/proxy/alfresco/api/(.*)$   -   [F]
+
+   RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
+
+#AlfrescoShareDefault#   RewriteCond    %{REQUEST_METHOD}   ^GET$
+#AlfrescoShareDefault#   RewriteRule    ^/$ http://%{HTTP_HOST}/share   [R=302,L]
+
+#AlfrescoContentAppDefault#   RewriteCond    %{REQUEST_METHOD}   ^GET$
+#AlfrescoContentAppDefault#   RewriteRule    ^/$ http://%{HTTP_HOST}/%CONTENT_APP_BASE_PATH%   [R=302,L]
+
+   ProxyPreserveHost On
+
+   ProxyPassMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/$1"
+   ProxyPassReverse "/alfresco" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco"
+#AlfrescoAOS#   ProxyPassReverse "/_vti_bin" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/_vti_bin"
+
+#AlfrescoApiExplorer#   ProxyPass "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/api-explorer"
+#AlfrescoApiExplorer#   ProxyPassReverse "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/api-explorer"
+
+#AlfrescoShare#   ProxyPass "/share" "http://%SHARE_HOST%:%SHARE_PORT%/share"
+#AlfrescoShare#   ProxyPassReverse "/share" "http://%SHARE_HOST%:%SHARE_PORT%/share"
+
+#AlfrescoContentApp#   ProxyPass "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+#AlfrescoContentApp#   ProxyPassReverse "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+
+#Keycloak#   ProxyPass "/%KEYCLOAK_PATH%" "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
+#Keycloak#   ProxyPassReverse "/%KEYCLOAK_PATH%" "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
+
+   ProxyPassReverse "/" "http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/"
+</VirtualHost>
