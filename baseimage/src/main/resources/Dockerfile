@@ -4,6 +4,8 @@ FROM phusion/baseimage:${phusion.baseimage.version}
 RUN apt-get update \
   && apt-get dist-upgrade -y \
   && install_clean \
+      inetutils-ping \
+      dnsutils \
       wget \
       zip \
       unzip \
