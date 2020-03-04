@@ -19,8 +19,9 @@ JMX_RMI_PORT=${JMX_RMI_PORT:=5000}
 JAVA_XMS=${JAVA_XMS:=512M}
 JAVA_XMX=${JAVA_XMX:-$JAVA_XMS}
 
-JAVA_OPTS_DEBUG_CHECK='-agentlib:jdwp=transport=dt_socket,server=[yn],suspend=[yn],address=*:(\d+)'
+JAVA_OPTS_DEBUG_CHECK='-agentlib:jdwp=transport=dt_socket,server=[yn],suspend=[yn],address=([^:]+:)?(\d+)'
 JAVA_OPTS_JMX_CHECK='-Dcom\.sun\.management\.jmxremote(\.(port|authenticate|local\.only|ssl|rmi\.port)=[^\s]+)?'
+JAVA_DEBUG_BIND_ALL=${JAVA_DEBUG_BIND_ALL:=false}
 
 MIN_CON_THREADS=${MIN_CON_THREADS:=10}
 MAX_CON_THREADS=${MAX_CON_THREADS:=200}
@@ -39,7 +40,12 @@ then
 
    if [[ $DEBUG == true && ! $JAVA_OPTS =~ $JAVA_OPTS_DEBUG_CHECK ]]
    then
-      JAVA_OPTS="${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT}"
+      if [[ $JAVA_DEBUG_BIND_ALL == true ]]
+      then
+         JAVA_OPTS="${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${DEBUG_PORT}"
+      else
+         JAVA_OPTS="${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG_PORT}"
+      fi
    fi
 
    if [[ ! $JAVA_OPTS =~ '-Xmx\d+[gGmM]' ]]

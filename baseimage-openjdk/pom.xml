@@ -33,7 +33,7 @@
                         <images>
                         <!-- actually build two variant images with different Java versions -->
                             <image>
-                                <name>${docker.image.id}8</name>
+                                <name>${docker.image.organisation}/baseimage-java8-openjdk</name>
                                 <build>
                                     <args>
                                         <jvmVersion>8</jvmVersion>
@@ -41,7 +41,7 @@
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}11</name>
+                                <name>${docker.image.organisation}/baseimage-java11-openjdk</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
                                     <args>

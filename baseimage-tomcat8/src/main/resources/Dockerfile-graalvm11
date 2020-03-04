@@ -1,4 +1,4 @@
-FROM ${docker.from.id}-graalvm-java11:${docker.from.version}
+FROM ${docker.from.id}-java11-graalvm:${docker.from.version}
 
 # Download and use newest 8.5 instead of the one in the distribution's repositories, and create structure identical to default package for simpler switch-over
 # Also build libtcnative
@@ -71,7 +71,8 @@ RUN cp /tmp/*.xml /etc/tomcat8/ \
    && chmod +x /etc/service/tomcat8/run
 
 ENV JMX_RMI_PORT=5000 \
-   DEBUG_PORT=8000
+   DEBUG_PORT=8000 \
+   JAVA_DEBUG_BIND_ALL=true
 
 EXPOSE 8080 8081 5000 8000
 

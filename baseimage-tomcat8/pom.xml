@@ -33,21 +33,21 @@
                         <images>
                         <!-- actually build four variant images with different Java versions -->
                             <image>
-                                <name>${docker.image.id}-openjdk8</name>
+                                <name>${docker.image.id}-java8-openjdk</name>
                                 <build>
                                     <dockerFile>Dockerfile-openjdk8</dockerFile>
                                     <args>
-                                        <baseImageNameSuffix>-openjdk8</baseImageNameSuffix>
+                                        <baseImageNameSuffix>-java8-openjdk</baseImageNameSuffix>
                                     </args>
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}-openjdk11</name>
+                                <name>${docker.image.id}-java11-openjdk</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
                                     <dockerFile>Dockerfile-openjdk11</dockerFile>
                                     <args>
-                                        <baseImageNameSuffix>-openjdk11</baseImageNameSuffix>
+                                        <baseImageNameSuffix>-java11-openjdk</baseImageNameSuffix>
                                     </args>
                                     <tags>
                                         <tag>latest</tag>
@@ -56,12 +56,12 @@
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}-graalvm-java8</name>
+                                <name>${docker.image.id}-java8-graalvm</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
                                     <dockerFile>Dockerfile-graalvm8</dockerFile>
                                     <args>
-                                        <baseImageNameSuffix>-graalvm-java8</baseImageNameSuffix>
+                                        <baseImageNameSuffix>-java8-graalvm</baseImageNameSuffix>
                                     </args>
                                     <tags>
                                         <tag>latest</tag>
@@ -70,12 +70,12 @@
                                 </build>
                             </image>
                             <image>
-                                <name>${docker.image.id}-graalvm-java11</name>
+                                <name>${docker.image.id}-java11-graalvm</name>
                                 <build>
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
                                     <dockerFile>Dockerfile-graalvm11</dockerFile>
                                     <args>
-                                        <baseImageNameSuffix>-graalvm-java11</baseImageNameSuffix>
+                                        <baseImageNameSuffix>-java11-graalvm</baseImageNameSuffix>
                                     </args>
                                     <tags>
                                         <tag>latest</tag>

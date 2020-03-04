@@ -1,4 +1,4 @@
-FROM ${docker.from.id}-openjdk8:${docker.from.version}
+FROM ${docker.from.id}-java8-openjdk:${docker.from.version}
 
 # Download and use newest 8.5 instead of the one in the distribution's repositories, and create structure identical to default package for simpler switch-over
 # Also build libtcnative
