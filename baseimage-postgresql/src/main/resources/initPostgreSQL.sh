@@ -31,7 +31,7 @@ setInConfigFile() {
    replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
 
    if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
-      sed -i "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
    else
       echo "${key}=${value}" >> ${fileName}
    fi
