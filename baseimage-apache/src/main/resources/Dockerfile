@@ -15,12 +15,15 @@ RUN openssl dhparam -dsaparam -out /etc/ssl/certs/dhparam.pem 4096
 # also include common sample host files for simple pre-selection via an ENV variable
 COPY initApache.sh startApache.sh *.conf.sample /tmp/
 
-RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4/' /etc/apache2/mods-available/ssl.conf \
+RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:HIGH:!aNULL:!eNULL:!EXP:!DES:!MD5:!PSK:!RC4/' /etc/apache2/mods-available/ssl.conf \
    && sed -i 's/#SSLHonorCipherOrder on/SSLHonorCipherOrder on/' /etc/apache2/mods-available/ssl.conf \
-   && sed -i 's/SSLProtocol all -SSLv3/SSLProtocol all -SSLv3 -TLSv1/' /etc/apache2/mods-available/ssl.conf \
+   && sed -i 's/SSLProtocol all -SSLv3/SSLProtocol ALL -SSLv2 -SSLv3 -TLSv1 -TLSv1.1 +TLSv1.2 +TLSv1.3/' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLUseStapling On' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLStaplingCache shmcb:${APACHE_RUN_DIR}/ssl_stapling(32768)' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLOpenSSLConfCmd DHParameters "/etc/ssl/certs/dhparam.pem"' /etc/apache2/mods-available/ssl.conf \
+   && sed -i 's/LogLevel warn/LogLevel notice/' /etc/apache2/apache2.conf \
+   && sed -i 's/Timeout 300/Timeout 5/' /etc/apache2/apache2.conf \
+   && rm -f /etc/apache2/mods-available/alias.conf \
    && rm -f /etc/apache2/sites-available/localhost*.conf* \
    && mkdir -p /etc/my_init.d \
    && mv /tmp/initApache.sh /etc/my_init.d/20_initApache.sh \
@@ -45,14 +48,25 @@ RUN a2enmod \
       lbmethod_byrequests \
       lbmethod_bytraffic \
       lbmethod_heartbeat \
-      xml2enc \
       expires \
       cache \
       cache_disk \
       rewrite \
       deflate \
       headers \
+   && a2dismod -f \
+      access_compat \
+      auth_basic \
+      authn_core \
+      authn_file \
+      authz_groupfile \
+      authz_user \
+      autoindex \
+      dir \
+      negotiation \
+      status \
    && a2disconf \
+      localized-error-pages \
       serve-cgi-bin \
       other-vhosts-access-log \
    && a2dissite \
@@ -60,10 +74,12 @@ RUN a2enmod \
 
 EXPOSE 80 443
 
-# if derived images don't add /etc/apache2/sites-available/host.conf and /etc/apache2/sites-available/host.ssl.conf
-# or don't select a pre-bundled one via ENV, we also expect file mounts to such files
-# (as host.conf.sample and host.ssl.conf.sample)
-VOLUME ["/srv/apache2/ssl"]
+# we technically support and sort-of expect mounts on
+# - /etc/apache2/sites-available/host.conf
+# - /etc/apache2/sites-available/host.ssl.conf
+# - /srv/apache2/ssl
+# ... unless derived images already provide those
+# but we don't force those as volumes (anymore)
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

@@ -32,7 +32,7 @@ then
 
          if grep --quiet "^${key}:" /etc/aliases; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+            value=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
             sed -i "s/^${key}:.*/${key}: ${value}/" /etc/aliases
          else
             echo "${key}: ${value}" >> /etc/aliases
@@ -52,7 +52,7 @@ then
          then
             if grep --quiet "^${key}\s" /etc/postfix/$filename; then
                # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-               value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+               value=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
                sed -i "s/^${key}.*/${key} ${value}/" /etc/postfix/$filename
             else
                echo "${key} ${value}" >> /etc/postfix/$filename

@@ -3,21 +3,21 @@
 set -euo pipefail
 
 file_env() {
-    local var="$1"
-    local fileVar="${var}_FILE"
-    local def="${2:-}"
-    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-        echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
-        exit 1
-    fi
-    local val="$def"
-    if [ "${!var:-}" ]; then
-        val="${!var}"
-    elif [ "${!fileVar:-}" ]; then
-        val="$(< "${!fileVar}")"
-    fi
-    unset "$fileVar"
-    echo "$val"
+   local var="$1"
+   local fileVar="${var}_FILE"
+   local def="${2:-}"
+   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+      echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+      exit 1
+   fi
+   local val="$def"
+   if [ "${!var:-}" ]; then
+      val="${!var}"
+   elif [ "${!fileVar:-}" ]; then
+      val="$(< "${!fileVar}")"
+   fi
+   unset "$fileVar"
+   echo "$val"
 }
 
 setInConfigFile() {
@@ -27,8 +27,8 @@ setInConfigFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
-   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
 
    if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
       sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
@@ -220,6 +220,12 @@ then
                GRANT_SQL="GRANT SELECT ON ALL TABLES IN SCHEMA ${db} TO ${user};"
                echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
 
+               # future object grants
+               GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON TABLES TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON SEQUENCES TO ${user};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+
             elif [ "${mode}" = 'full' -o "${mode}" = 'write' ]; then
 
                GRANT_OPT=""
@@ -234,6 +240,12 @@ then
                GRANT_SQL="GRANT ALL ON ALL SEQUENCES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
                echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
                GRANT_SQL="GRANT ALL ON ALL TABLES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+
+               # future object grants
+               GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON TABLES TO ${user}${GRANT_OPT};"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON SEQUENCES TO ${user}${GRANT_OPT};"
                echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
             fi
          fi
