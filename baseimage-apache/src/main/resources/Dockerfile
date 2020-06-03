@@ -21,8 +21,9 @@ RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite ECDH+AESGCM:DH+AESGCM:EC
    && sed -i '/<\/IfModule>/i    SSLUseStapling On' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLStaplingCache shmcb:${APACHE_RUN_DIR}/ssl_stapling(32768)' /etc/apache2/mods-available/ssl.conf \
    && sed -i '/<\/IfModule>/i    SSLOpenSSLConfCmd DHParameters "/etc/ssl/certs/dhparam.pem"' /etc/apache2/mods-available/ssl.conf \
-   && sed -i 's/LogLevel warn/LogLevel notice/' /etc/apache2/apache2.conf \
-   && sed -i 's/Timeout 300/Timeout 5/' /etc/apache2/apache2.conf \
+   && sed -i 's/^LogLevel warn$/LogLevel notice/' /etc/apache2/apache2.conf \
+   && sed -i 's/^ServerTokens OS$/ServerTokens Prod/' /etc/apache2/conf-available/security.conf \
+   && sed -i 's/^ServerSignature On$/ServerSignature Off/' /etc/apache2/conf-available/security.conf \
    && rm -f /etc/apache2/mods-available/alias.conf \
    && rm -f /etc/apache2/sites-available/localhost*.conf* \
    && mkdir -p /etc/my_init.d \
@@ -36,7 +37,6 @@ RUN sed -i 's/SSLCipherSuite HIGH:!aNULL/SSLCipherSuite ECDH+AESGCM:DH+AESGCM:EC
 
 RUN a2enmod \
       authz_groupfile \
-      http2 \
       proxy \
       proxy_ajp \
       proxy_http \
@@ -62,7 +62,6 @@ RUN a2enmod \
       authz_groupfile \
       authz_user \
       autoindex \
-      dir \
       negotiation \
       status \
    && a2disconf \

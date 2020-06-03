@@ -32,12 +32,13 @@ ENABLE_SSL=${ENABLE_SSL:=true}
 FORCE_SSL=${FORCE_SSL:=true}
 USE_LETSENCRYPT=${USE_LETSENCRYPT:=true}
 
+APACHE2_CONF_TIMEOUT=${APACHE2_CONF_TIMEOUT:=5}
+
 if [ ! -f '/var/lib/apache2/.initDone' ]
 then
    mkdir -p /var/www/${PUBLIC_HOST}/html
 
-   sed -i "s/^ServerTokens OS/ServerTokens Prod/" /etc/apache2/conf-available/security.conf
-   sed -i "s/^ServerSignature On/ServerSignature Off/" /etc/apache2/conf-available/security.conf
+   sed -i "s/^Timeout [^$]+/Timeout ${APACHE2_CONF_TIMEOUT}/" /etc/apache2/apache2.conf
 
    if [[ -z $(grep "^ServerName ${PUBLIC_HOST}" /etc/apache2/apache2.conf) ]]
    then
