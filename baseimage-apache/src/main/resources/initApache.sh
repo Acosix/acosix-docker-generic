@@ -26,7 +26,7 @@ LETSENCRYPT_MAIL=${LETSENCRYPT_MAIL:=webmaster@host.example.com}
 
 REGENERATE_PREDEFINED_DHPARAMS=${REGENERATE_PREDEFINED_DHPARAMS:=false}
 
-BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:-}
+BASE_SAMPLE_HOST=${BASE_SAMPLE_HOST:=""}
 
 ENABLE_SSL=${ENABLE_SSL:=true}
 FORCE_SSL=${FORCE_SSL:=true}
@@ -38,9 +38,10 @@ if [ ! -f '/var/lib/apache2/.initDone' ]
 then
    mkdir -p /var/www/${PUBLIC_HOST}/html
 
-   sed -i "s/^Timeout [^$]+/Timeout ${APACHE2_CONF_TIMEOUT}/" /etc/apache2/apache2.conf
+   # for some reason, replace for ^Timeout [0-9]+$ does not work - 300 is the Ubuntu default
+   sed -ir "s/^Timeout 300$/Timeout ${APACHE2_CONF_TIMEOUT}/" /etc/apache2/apache2.conf
 
-   if [[ -z $(grep "^ServerName ${PUBLIC_HOST}" /etc/apache2/apache2.conf) ]]
+   if [[ -z $(grep "^ServerName ${PUBLIC_HOST}$" /etc/apache2/apache2.conf) ]]
    then
       sed -i "/# vim:/i ServerName ${PUBLIC_HOST}" /etc/apache2/apache2.conf
    fi
@@ -105,12 +106,12 @@ then
                regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`               
                if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
                then
-                  sed -i "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+                  sed -ir "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
                fi
 
                if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
                then
-                  sed -i "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+                  sed -ir "s/#${regexSafeKey}#//g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
                fi
             fi
          else
@@ -127,12 +128,12 @@ then
 
             if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
             then
-               sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
+               sed -ir "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.conf
             fi
 
             if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf" ]
             then
-               sed -i "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
+               sed -ir "s/%${regexSafeKey}%/${replacementSafeValue}/g" /etc/apache2/sites-available/${PUBLIC_HOST}.ssl.conf
             fi
          fi
       fi

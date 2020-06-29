@@ -13,7 +13,7 @@
 
     <properties>
         <graalvm.version>20.1.0</graalvm.version>
-        <dep.tomcat.version>8.5.55</dep.tomcat.version>
+        <dep.tomcat.version>8.5.56</dep.tomcat.version>
     </properties>
 
     <modules>
