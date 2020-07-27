@@ -37,7 +37,7 @@ then
          else
             echo "${key}: ${value}" >> /etc/aliases
          fi
-    
+
          newaliases
       fi
       

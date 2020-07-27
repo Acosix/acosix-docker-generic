@@ -53,7 +53,8 @@ RUN wget -O /tmp/tomcat.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v
 COPY server.xml initTomcat.sh startTomcat.sh tomcat-ng.conf /tmp/
 
 # apply our tomcat default configurations
-RUN cp /tmp/*.xml /etc/tomcat8/ \
+RUN cp /tmp/server.xml /etc/tomcat8/server.xml \
+   && rm /tmp/server.xml \
    && chown root:tomcat8 /etc/tomcat8/server.xml \
    && chown -R tomcat8:tomcat8 /var/lib/tomcat8 /var/log/tomcat8 \
    && chmod 640 /etc/tomcat8/server.xml \
