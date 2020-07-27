@@ -12,6 +12,12 @@
 #sslOnly#    RewriteCond %{HTTPS} off
 #sslOnly#    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]
 
+   # ensure SameSite is set
+   Header edit Set-Cookie (.*) "$1; SameSite=strict"
+
+   # cleanup any doubled settings if backend already provided cookies with SameSite - first (original) SameSite wins
+   Header edit Set-Cookie ^(.*)(;\s?SameSite=(?:[Nn]one|[Ss]trict|[Ll]ax))(;.*)?;\s?SameSite=(?:[Nn]one|[Ss]trict|[Ll]ax)(;.*)?$ "$1$3$4$2"
+
    RewriteRule    ^/alfresco/(s|service|wcs|wservice)/api/solr/(.*)$   -   [F]
 
    ProxyPreserveHost On
