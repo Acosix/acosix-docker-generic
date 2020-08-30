@@ -92,16 +92,16 @@ then
          USER_OP=ALTER
       fi
       USER_SQL="${USER_OP} USER ${PG_USER} WITH SUPERUSER ${PASS};"
-      echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+      echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
       if [ "${PG_DB}" != 'postgres' ]; then
          echo "Creating database ${PG_DB}" > /proc/1/fd/1
          CREATE_SQL="CREATE DATABASE ${PG_DB} ENCODING = 'UTF8' OWNER = ${PG_USER};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
          CREATE_SQL="CREATE SCHEMA ${PG_DB} AUTHORIZATION ${PG_USER};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}" > /dev/null
          CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
          echo "host ${PG_DB} ${PG_USER} 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
          echo "host ${PG_DB} ${PG_USER} ::0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
@@ -130,7 +130,7 @@ then
             echo "Creating user ${user}" > /proc/1/fd/1
 
             USER_SQL="CREATE USER ${user} NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD '${pass}';"
-            echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+            echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
          fi
       done
 
@@ -152,7 +152,7 @@ then
             else
                CREATE_SQL="${CREATE_SQL};"
             fi
-            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
             CREATE_SQL="CREATE SCHEMA ${db}"
             if [[ ! -z "${owner}" ]]
             then
@@ -160,13 +160,13 @@ then
             else
                CREATE_SQL="${CREATE_SQL};"
             fi
-            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
             CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db};"
-            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+            echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
             if [ "${owner}" != 'postgres' -a "${owner}" != "${PG_USER}" ]; then
 
-               echo "Setting up client access for owner ${user} to ${db}" > /proc/1/fd/1
+               echo "Setting up client access for owner ${owner} to ${db}" > /proc/1/fd/1
 
                echo "host ${db} ${owner} 0.0.0.0/0 md5" >> "${PG_DATA}/pg_hba.conf"
                echo "host ${db} ${owner} ::0/0 md5" >> "${PG_DATA}/pg_hba.conf"
@@ -180,7 +180,7 @@ then
       do
          if [[ $i == PG_USER_* ]]
          then
-            user=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-`
+            user=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 3-`
             dbs=`echo "$i" | cut -d '=' -f 2-`
 
             if [[ ! -z "${dbs}" ]]
@@ -212,19 +212,19 @@ then
 
             if [ "${mode}" = 'read' ]; then
                GRANT_SQL="GRANT CONNECT ON DATABASE ${db} TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
                GRANT_SQL="GRANT USAGE ON SCHEMA ${db} TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="GRANT SELECT ON ALL SEQUENCES IN SCHEMA ${db} TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="GRANT SELECT ON ALL TABLES IN SCHEMA ${db} TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
                # future object grants
                GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON TABLES TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON SEQUENCES TO ${user};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
             elif [ "${mode}" = 'full' -o "${mode}" = 'write' ]; then
 
@@ -234,19 +234,19 @@ then
                fi
 
                GRANT_SQL="GRANT ALL ON DATABASE ${db} TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
                GRANT_SQL="GRANT ALL ON SCHEMA ${db} TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="GRANT ALL ON ALL SEQUENCES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="GRANT ALL ON ALL TABLES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
                # future object grants
                GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON TABLES TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
                GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON SEQUENCES TO ${user}${GRANT_OPT};"
-               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}"
+               echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
             fi
          fi
       done
