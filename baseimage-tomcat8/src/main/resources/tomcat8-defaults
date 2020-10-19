@@ -29,7 +29,7 @@ JAVA_OPTS="-Djava.awt.headless=true"
 #JSP_COMPILER=javac
 
 # Use the Java security manager? (yes/no, default: no)
-#TOMCAT8_SECURITY=no
+TOMCAT8_SECURITY=yes
 
 # Number of days to keep logfiles in /var/log/tomcat8. Default is 14 days.
 #LOGFILE_DAYS=14

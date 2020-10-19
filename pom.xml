@@ -12,8 +12,8 @@
     <packaging>pom</packaging>
 
     <properties>
-        <graalvm.version>20.1.0</graalvm.version>
-        <dep.tomcat.version>8.5.56</dep.tomcat.version>
+        <graalvm.version>20.2.0</graalvm.version>
+        <dep.tomcat.version>8.5.58</dep.tomcat.version>
     </properties>
 
     <modules>

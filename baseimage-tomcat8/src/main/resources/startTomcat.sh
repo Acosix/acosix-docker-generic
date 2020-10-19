@@ -34,8 +34,8 @@ fi
 # The following variables can be overwritten in $DEFAULT
 
 # Run Tomcat 8 as this user ID and group ID
-tomcat8_USER=tomcat8
-tomcat8_GROUP=tomcat8
+TOMCAT8_USER=tomcat8
+TOMCAT8_GROUP=tomcat8
 
 find_jdks()
 {
@@ -95,7 +95,7 @@ CATALINA_HOME=/usr/share/tomcat8
 CATALINA_BASE=/var/lib/tomcat8
 
 # Use the Java security manager? (yes/no)
-tomcat8_SECURITY=no
+TOMCAT8_SECURITY=no
 
 # Default Java options
 # Set java.awt.headless=true if JAVA_OPTS is not set so the
@@ -130,7 +130,7 @@ if [ -n "$JSP_COMPILER" ]; then
 fi
 
 SECURITY=""
-if [ "$tomcat8_SECURITY" = "yes" ]; then
+if [ "$TOMCAT8_SECURITY" = "yes" ]; then
         SECURITY="-security"
 fi
 
@@ -164,10 +164,10 @@ mkdir -p "$JVM_TMP" || {
       log_failure_msg "could not create JVM temporary directory"
       exit 1
 }
-chown $tomcat8_USER:$tomcat8_GROUP "$JVM_TMP"
+chown $TOMCAT8_USER:$TOMCAT8_GROUP "$JVM_TMP"
 
 touch $CATALINA_BASE/logs/catalina.out
-chown $tomcat8_USER:$tomcat8_GROUP $CATALINA_BASE/logs/catalina.out
+chown $TOMCAT8_USER:$TOMCAT8_GROUP $CATALINA_BASE/logs/catalina.out
 
 set -a
 
@@ -180,4 +180,4 @@ LANG="${LANG}"
 JSSE_HOME="${JSSE_HOME}"
 
 cd $CATALINA_BASE
-exec /sbin/setuser $tomcat8_USER $CATALINA_SH run $SECURITY >> $CATALINA_BASE/logs/catalina.out 2>&1
+exec /sbin/setuser $TOMCAT8_USER $CATALINA_SH run $SECURITY >> $CATALINA_BASE/logs/catalina.out 2>&1
