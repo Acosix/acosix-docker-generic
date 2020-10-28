@@ -12,7 +12,8 @@ RUN mv /tmp/postgresql-logrotate.d /etc/logrotate.d/postgresql \
    && chmod +x /etc/my_init.d/20_initPostgreSQL.sh \
    && mkdir /etc/service/postgresql \
    && mv /tmp/startPostgreSQL.sh /etc/service/postgresql/run \
-   && chmod +x /etc/service/postgresql/run
+   && chmod +x /etc/service/postgresql/run \
+   && rm -rf /var/log/postgresql/postgresql-*-main.log
 
 EXPOSE 5432
 
