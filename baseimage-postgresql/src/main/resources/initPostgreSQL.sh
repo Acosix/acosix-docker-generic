@@ -100,7 +100,7 @@ then
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
          CREATE_SQL="CREATE SCHEMA ${PG_DB} AUTHORIZATION ${PG_USER};"
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}" > /dev/null
-         CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB};"
+         CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB}, public;"
          echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
          echo "host ${PG_DB} ${PG_USER} 0.0.0.0/0 ${AUTH}" >> "${PG_DATA}/pg_hba.conf"
@@ -161,7 +161,7 @@ then
                CREATE_SQL="${CREATE_SQL};"
             fi
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db};"
+            CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db}, public;"
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
             if [ "${owner}" != 'postgres' -a "${owner}" != "${PG_USER}" ]; then
