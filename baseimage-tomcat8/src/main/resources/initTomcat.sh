@@ -2,29 +2,30 @@
 
 set -euo pipefail
 
-DEBUG=${DEBUG:=false}
-DEBUG_PORT=${DEBUG_PORT:=8000}
+DEBUG=${DEBUG:-false}
+DEBUG_PORT=${DEBUG_PORT:-8000}
 
-ENABLE_PROXY=${ENABLE_PROXY:=true}
-PROXY_NAME=${PROXY_NAME:=localhost}
-PROXY_PORT=${PROXY_PORT:=80}
-ENABLE_SSL_PROXY=${ENABLE_SSL_PROXY:=false}
-PROXY_SSL_PORT=${PROXY_SSL_PORT:=443}
-JAVA_OPTS=${JAVA_OPTS:=''}
+ENABLE_PROXY=${ENABLE_PROXY:-true}
+PROXY_NAME=${PROXY_NAME:-localhost}
+PROXY_PORT=${PROXY_PORT:-80}
+ENABLE_SSL_PROXY=${ENABLE_SSL_PROXY:-false}
+PROXY_SSL_PORT=${PROXY_SSL_PORT:-443}
+JAVA_OPTS=${JAVA_OPTS:-''}
 
-JMX_ENABLED=${JMX_ENABLED:=false}
-JMX_RMI_HOST=${JMX_RMI_HOST:=127.0.0.1}
-JMX_RMI_PORT=${JMX_RMI_PORT:=5000}
+JMX_ENABLED=${JMX_ENABLED:-false}
+JMX_RMI_HOST=${JMX_RMI_HOST:-127.0.0.1}
+JMX_RMI_PORT=${JMX_RMI_PORT:-5000}
 
-JAVA_XMS=${JAVA_XMS:=512M}
+JAVA_XMS=${JAVA_XMS:-512M}
 JAVA_XMX=${JAVA_XMX:-$JAVA_XMS}
 
 JAVA_OPTS_DEBUG_CHECK='-agentlib:jdwp=transport=dt_socket,server=[yn],suspend=[yn],address=([^:]+:)?(\d+)'
 JAVA_OPTS_JMX_CHECK='-Dcom\.sun\.management\.jmxremote(\.(port|authenticate|local\.only|ssl|rmi\.port)=[^\s]+)?'
-JAVA_DEBUG_BIND_ALL=${JAVA_DEBUG_BIND_ALL:=false}
+JAVA_DEBUG_BIND_ALL=${JAVA_DEBUG_BIND_ALL:-false}
+JAVA_SECURITY_ENABLED=${JAVA_SECURITY_ENABLED:-true}
 
-MIN_CON_THREADS=${MIN_CON_THREADS:=10}
-MAX_CON_THREADS=${MAX_CON_THREADS:=200}
+MIN_CON_THREADS=${MIN_CON_THREADS:-10}
+MAX_CON_THREADS=${MAX_CON_THREADS:-200}
 
 if [ ! -f '/var/lib/tomcat8/.tomcatInitDone' ]
 then
@@ -73,10 +74,39 @@ then
       fi
    fi
 
+   if [[ $JAVA_SECURITY_ENABLED == true ]]
+   then
+      JAVA_SECURITY_ENABLED=yes
+
+      touch /etc/tomcat8/catalina.policy
+      chown tomcat8:tomcat8 /etc/tomcat8/catalina.policy
+
+      cat /etc/tomcat8/policy.d/01system.policy >> /etc/tomcat8/catalina.policy
+      cat /etc/tomcat8/policy.d/02catalina.policy >> /etc/tomcat8/catalina.policy
+      cat /etc/tomcat8/policy.d/03webapps.policy >> /etc/tomcat8/catalina.policy
+
+      # otherwise for will also cut on whitespace
+      IFS=$'\n'
+      for i in `env`
+      do
+         key=`echo "$i" | cut -d '=' -f 1`
+         value=`echo "$i" | cut -d '=' -f 2-`
+
+         if [[ $key =~ ^JAVA_SECURITY_POLICY_[^_]+_FILE$ && -f "$value" ]]
+         then
+            echo "Merging in $value into effective Tomcat security policy" > /proc/1/fd/1
+            cat $value >> /etc/tomcat8/catalina.policy
+         fi
+      done
+   else
+      JAVA_SECURITY_ENABLED=no
+   fi
+
    # need to encode any forward slahes in JAVA_OPTS
    JAVA_OPTS=$(echo "${JAVA_OPTS}" | sed -r "s/(\/)/\\\\\1/g")
 
    sed -i "s/%JAVA_OPTS%/${JAVA_OPTS}/" /etc/default/tomcat8
+   sed -i "s/%JAVA_SECURITY_ENABLED%/${JAVA_SECURITY_ENABLED}/" /etc/default/tomcat8
    sed -i "s/%MIN_CONNECTOR_THREADS%/${MIN_CON_THREADS}/g" /etc/tomcat8/server.xml
    sed -i "s/%MAX_CONNECTOR_THREADS%/${MAX_CON_THREADS}/g" /etc/tomcat8/server.xml
 

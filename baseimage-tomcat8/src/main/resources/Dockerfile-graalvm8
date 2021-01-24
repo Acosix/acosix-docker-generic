@@ -20,6 +20,7 @@ RUN wget -O /tmp/tomcat.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v
    && mkdir -p /var/lib/tomcat8/lib /var/lib/tomcat8/webapps /var/log/tomcat8 /var/cache/tomcat8 /usr/share/tomcat8 /etc/tomcat8/policy.d \
    && mv /tmp/apache-tomcat-${dep.tomcat.version}/bin /tmp/apache-tomcat-${dep.tomcat.version}/lib /usr/share/tomcat8 \
    && mv /tmp/apache-tomcat-${dep.tomcat.version}/conf/* /etc/tomcat8/ \
+   && rm /etc/tomcat8/catalina.policy \
    && mv /tmp/*.policy /etc/tomcat8/policy.d/ \
    && rm -rf /tmp/apache-tomcat-${dep.tomcat.version} /tmp/tomcat.tar.gz \
    && ln -s /etc/tomcat8 /var/lib/tomcat8/conf  \
@@ -60,9 +61,6 @@ RUN cp /tmp/server.xml /etc/tomcat8/server.xml \
    && chmod 640 /etc/tomcat8/server.xml \
    && mkdir -p /usr/share/tomcat8/common/classes /usr/share/tomcat8/server/classes /usr/share/tomcat8/shared/classes \
    && sed -i 's/^handlers = .*/handlers = java.util.logging.ConsoleHandler/' /etc/tomcat8/logging.properties \
-   && sed -i 's/^JAVA_OPTS=.*/JAVA_OPTS="-Djava.awt.headless=true %JAVA_OPTS%"/' /etc/default/tomcat8 \
-   && sed -i 's/^#LOGFILE_DAYS=.*/LOGFILE_DAYS=2/' /etc/default/tomcat8 \
-   && sed -i 's/^#LOGFILE_COMPRESS=.*/LOGFILE_COMPRESS=1/' /etc/default/tomcat8 \
    && mv /tmp/tomcat-logrotate.d /etc/logrotate.d/tomcat \
    && touch /var/lib/tomcat8/logs/.tomcat-logrotate-dummy \
    && mkdir -p /etc/my_init.d \

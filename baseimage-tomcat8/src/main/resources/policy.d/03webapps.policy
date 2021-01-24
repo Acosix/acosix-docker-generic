@@ -41,19 +41,23 @@ grant {
     // Allow read of JAXP compliant XML parser debug
     permission java.util.PropertyPermission "jaxp.debug", "read";
 
+    // All JSPs need to be able to read this package
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat";
+
     // Precompiled JSPs need access to this package.
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.el";
     permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.runtime";
     permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.runtime.*";
 
-    // Example JSPs need those to work properly
-    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.jasper.el";
-    permission java.lang.RuntimePermission "accessDeclaredMembers";
-
-    // Precompiled JSPs need access to this system property.
-    permission java.util.PropertyPermission "org.apache.jasper.runtime.BodyContentImpl.LIMIT_BUFFER", "read";
+    // Applications using WebSocket need to be able to access these packages
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket";
+    permission java.lang.RuntimePermission "accessClassInPackage.org.apache.tomcat.websocket.server";
 
     // java.io.tmpdir should be usable as a temporary file directory
     permission java.util.PropertyPermission "java.io.tmpdir", "read";
-    permission java.io.FilePermission "${java.io.tmpdir}/-", "read,write,delete";
+    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
 
+    // logs directory must be accessible in case any custom log frameworks are used
+    permission java.io.FilePermission "\${catalina.base}/logs", "read";
+    permission java.io.FilePermission "\${catalina.base}/logs/-", "read,write,delete";
 };
