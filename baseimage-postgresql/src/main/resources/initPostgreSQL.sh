@@ -27,13 +27,12 @@ setInConfigFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
    replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
 
-   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
-      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   if grep --quiet -E "^#?${regexSafeKey}\s*=" ${fileName}; then
+      sed -ri "s/^#?(${regexSafeKey}\s*=)[^#\$]*/\1${replacementSafeValue} /" ${fileName}
    else
-      echo "${key}=${value}" >> ${fileName}
+      echo "${key} = ${value}" >> ${fileName}
    fi
 }
 
@@ -50,19 +49,7 @@ PG_VERSION="$(ls -A --ignore=.* /usr/lib/postgresql)"
 if [ ! -f "/var/lib/.postgresInitDone" ]
 then
 
-   echo -e "source s_postgreqsl { file("/var/log/postgresql/postgresql-${PG_VERSION}-main.log" follow-freq(1)); };\nlog { source(s_postgreqsl); destination(d_stdout); };" > /etc/syslog-ng/conf.d/postgresql-ng.conf
-
-   IFS=$'\n'
-   for i in `env`
-   do
-      if [[ $i == PGCONF_* ]]
-      then
-         key=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo $i | cut -d '=' -f 2-`
-
-         setInConfigFile "/etc/postgresql/${PG_VERSION}/main/postgresql.conf" ${key} ${value}
-      fi
-   done
+   echo -e "source s_postgresql { file("/var/log/postgresql/postgresql-${PG_VERSION}-main.log" follow-freq(1)); };\nlog { source(s_postgreqsl); destination(d_stdout); };" > /etc/syslog-ng/conf.d/postgresql-ng.conf
    
    if [[ ! -d "${PG_DATA}" ]]
    then
@@ -265,6 +252,18 @@ then
          su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -m fast -w stop"
       fi 
    fi
+
+   IFS=$'\n'
+   for i in `env`
+   do
+      if [[ $i == PGCONF_* ]]
+      then
+         key=`echo $i | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         value=`echo $i | cut -d '=' -f 2-`
+
+         setInConfigFile "${PG_DATA}/postgresql.conf" ${key} ${value}
+      fi
+   done
 
    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "${PG_DATA}/postgresql.conf"
 
