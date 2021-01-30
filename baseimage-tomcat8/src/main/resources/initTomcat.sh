@@ -24,6 +24,8 @@ JAVA_OPTS_JMX_CHECK='-Dcom\.sun\.management\.jmxremote(\.(port|authenticate|loca
 JAVA_DEBUG_BIND_ALL=${JAVA_DEBUG_BIND_ALL:-false}
 JAVA_SECURITY_ENABLED=${JAVA_SECURITY_ENABLED:-true}
 
+JAVA_DNS_TIMEOUT=${JAVA_DNS_TIMEOUT:-60}
+
 MIN_CON_THREADS=${MIN_CON_THREADS:-10}
 MAX_CON_THREADS=${MAX_CON_THREADS:-200}
 
@@ -72,6 +74,12 @@ then
       then
          JAVA_OPTS="${JAVA_OPTS} -XX:+UseStringDeduplication"
       fi
+   fi
+
+   if [[ ! $JAVA_OPTS =~ '-Dnetworkaddress\.cache\.ttl=' ]]
+   then
+      # explicitly limit JVM DNS cache to 60s to cope with re-mapped IPs of other Docker containers the JVM may depend upon
+      JAVA_OPTS="${JAVA_OPTS} -Dnetworkaddress.cache.ttl=${JAVA_DNS_TIMEOUT}"
    fi
 
    if [[ $JAVA_SECURITY_ENABLED == true ]]
