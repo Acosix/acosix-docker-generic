@@ -42,22 +42,45 @@
 
       ProxyPreserveHost On
 
-      ProxyPassMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/$1"
-      ProxyPassReverse "/alfresco" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco"
-#AlfrescoAOS#      ProxyPassReverse "/_vti_bin" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/_vti_bin"
+      <Location "/">
+         ProxyPassReverse "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/"
+      </Location>
 
-#AlfrescoApiExplorer#      ProxyPass "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
-#AlfrescoApiExplorer#      ProxyPassReverse "/api-explorer" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+#AlfrescoAOS#      <Location "/_vti_bin">
+#AlfrescoAOS#         ProxyPassReverse "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/_vti_bin"
+#AlfrescoAOS#      </Location>
 
-#AlfrescoShare#      ProxyPass "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
-#AlfrescoShare#      ProxyPassReverse "/share" "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
+#AlfrescoApiExplorer#      <Location "/api-explorer">
+#AlfrescoApiExplorer#         ProxyPass "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+#AlfrescoApiExplorer#         ProxyPassReverse "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/api-explorer"
+#AlfrescoApiExplorer#      </Location>
 
-#AlfrescoContentApp#      ProxyPass "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
-#AlfrescoContentApp#      ProxyPassReverse "/%CONTENT_APP_BASE_PATH%" "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+#AlfrescoShare#      <Location "/share">
+#AlfrescoShare#         ProxyPass "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
+#AlfrescoShare#         ProxyPassReverse "http://%SHARE_HOST%:%SHARE_SSL_PORT%/share"
+#AlfrescoShare#      </Location>
 
-#Keycloak#      ProxyPass "/%KEYCLOAK_PATH%" "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
-#Keycloak#      ProxyPassReverse "/%KEYCLOAK_PATH%" "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
+#AlfrescoContentApp#      <Location "/%CONTENT_APP_BASE_PATH%">
+#AlfrescoContentApp#         ProxyPass "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+#AlfrescoContentApp#         ProxyPassReverse "http://%CONTENT_APP_HOST%:%CONTENT_APP_PORT%/"
+#AlfrescoContentApp#      </Location>
 
-      ProxyPassReverse "/" "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/"
+#Keycloak#      <Location "/%KEYCLOAK_PATH%">
+#Keycloak#         CacheEnable disk
+#Keycloak#         CacheDefaultExpire 3600
+#Keycloak#         CacheMaxExpire 86400
+#Keycloak#
+#Keycloak#         ProxyPass "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
+#Keycloak#         ProxyPassReverse "http://%KEYCLOAK_HOST%:%KEYCLOAK_PORT%/%KEYCLOAK_PATH%"
+#Keycloak#      </Location>
+
+      <Location "/alfresco">
+         ProxyPassReverse "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco"
+      </Location>
+
+      <LocationMatch "^/(alfresco(/.*)?|_vti_bin/.*|_vti_inf.html)?$">
+         ProxyPassMatch "http://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/$1"
+      </LocationMatch>
+
    </VirtualHost>
 </IfModule>
