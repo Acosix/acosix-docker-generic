@@ -23,13 +23,13 @@
         <version>1.0.0</version>
     </parent>
 
-    <version>20210309</version>
+    <version>20210319</version>
     <artifactId>acosix-docker-generic-parent</artifactId>
     <packaging>pom</packaging>
 
     <properties>
         <graalvm.version>21.0.0.2</graalvm.version>
-        <dep.tomcat.version>8.5.63</dep.tomcat.version>
+        <dep.tomcat.version>8.5.64</dep.tomcat.version>
     </properties>
 
     <modules>

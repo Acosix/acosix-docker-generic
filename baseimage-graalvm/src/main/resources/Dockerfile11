@@ -27,6 +27,7 @@ RUN install_clean \
 
 # Only the most commonly used executables are added to the alternatives system
 # no manpage files in java11 build + slightly different binary paths than for java8
+COPY initCustomJavaCACertificates.sh /etc/my_init.d/00_initCustomJavaCACertificates.sh
 RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/java 100 \
    && update-alternatives --install /usr/bin/jjs jjs /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jjs 100 \
    && update-alternatives --install /usr/bin/js js /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/js 100 \
@@ -41,7 +42,11 @@ RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-jav
    && update-alternatives --install /usr/bin/jstack jstack /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jstack 100 \
    && update-alternatives --install /usr/bin/jmap jmap /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jmap 100 \
    && update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jar 100 \
-   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/javadoc 100
+   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/javadoc 100 \
+   && mkdir -p /etc/ssl/certs/java \
+   && mv /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/lib/security/cacerts /etc/ssl/certs/java/ \
+   && ln -s /etc/ssl/certs/java/cacerts /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/lib/security/cacerts \
+   && chmod +x /etc/my_init.d/00_initCustomJavaCACertificates.sh
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

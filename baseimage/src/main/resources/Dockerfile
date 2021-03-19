@@ -11,7 +11,11 @@ RUN apt-get update \
       unzip \
       bsdtar \
       lsof \
+      libnss3-tools \
   && apt-get autoremove -y
+
+COPY initCustomCACertificates.sh /etc/my_init.d/00_initCustomCACertificates.sh
+RUN chmod +x /etc/my_init.d/00_initCustomCACertificates.sh
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

@@ -26,6 +26,7 @@ RUN install_clean \
    && rm /tmp/graalvm-ce-java8
 
 # Only the most commonly used executables are added to the alternatives system
+COPY initCustomJavaCACertificates.sh /etc/my_init.d/00_initCustomJavaCACertificates.sh
 RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/jre/bin/java 100 --slave /usr/share/man/man1/java.1.gz java.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/java.1 \
    && update-alternatives --install /usr/bin/jjs jjs /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/jre/bin/jjs 100 --slave /usr/share/man/man1/jjs.1.gz jjs.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/jjs.1 \
    && update-alternatives --install /usr/bin/js js /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/jre/bin/js 100 \
@@ -42,7 +43,11 @@ RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-jav
    && update-alternatives --install /usr/bin/jhat jhat /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/bin/jhat 100 --slave /usr/share/man/man1/jhat.1.gz jhat.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/jhat.1 \
    && update-alternatives --install /usr/bin/jmap jmap /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/bin/jmap 100 --slave /usr/share/man/man1/jmap.1.gz jmap.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/jmap.1 \
    && update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/bin/jar 100 --slave /usr/share/man/man1/jar.1.gz jar.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/jar.1 \
-   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/bin/javadoc 100 --slave /usr/share/man/man1/javadoc.1.gz javadoc.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/javadoc.1
+   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/bin/javadoc 100 --slave /usr/share/man/man1/javadoc.1.gz javadoc.1.gz /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/man/man1/javadoc.1 \
+   && mkdir -p /etc/ssl/certs/java \
+   && mv /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/jre/lib/security/cacerts /etc/ssl/certs/java/ \
+   && ln -s /etc/ssl/certs/java/cacerts /usr/lib/jvm/graalvm-ce-java8-${graalvm.version}/jre/lib/security/cacerts \
+   && chmod +x /etc/my_init.d/00_initCustomJavaCACertificates.sh
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
