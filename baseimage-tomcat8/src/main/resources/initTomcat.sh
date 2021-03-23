@@ -110,6 +110,26 @@ then
       JAVA_SECURITY_ENABLED=no
    fi
 
+   # otherwise for will also cut on whitespace
+   IFS=$'\n'
+   for i in `env`
+   do
+      value=`echo "$i" | cut -d '=' -f 2-`
+      if [[ $i == D_* ]]
+      then
+         echo "Processing granular JAVA_OPTS -D-flag environment variable $i" > /proc/1/fd/1
+         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+
+         if [[ $key == *_FILE ]]
+         then
+            value="$(< "${value}")"
+            key=`echo "$key" | sed -r 's/_FILE$//'`
+         fi
+
+         JAVA_OPTS="${JAVA_OPTS} -D${key}=${value}"
+      fi
+   done
+
    # need to encode any forward slahes in JAVA_OPTS
    JAVA_OPTS=$(echo "${JAVA_OPTS}" | sed -r "s/(\/)/\\\\\1/g")
 
