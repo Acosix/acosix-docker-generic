@@ -24,7 +24,7 @@
     </parent>
 
     <artifactId>baseimage-tomcat8</artifactId>
-    <version>20210321</version>
+    <version>20210331</version>
 
     <properties>
         <docker.from.name>baseimage</docker.from.name>

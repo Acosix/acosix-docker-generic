@@ -38,7 +38,7 @@ RUN wget -O /tmp/tomcat.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v
    && rm -rf "$nativeBuildDir" \
    && rm /usr/share/tomcat8/bin/tomcat-native.tar.gz \
    && groupadd -g 12000 tomcat8 \
-   && useradd -s /bin/false -b /var/lib/tomcat8 -g tomcat8 -u 12000 -M tomcat8 \
+   && useradd -s /bin/false -d /var/lib/tomcat8 -g tomcat8 -u 12000 -M tomcat8 \
    && chown -R tomcat8:tomcat8 /var/lib/tomcat8 /var/log/tomcat8 /var/cache/tomcat8 /usr/share/tomcat8 /etc/tomcat8 \
    && mv /tmp/tomcat8-defaults /etc/default/tomcat8 \
    && apt-get autoremove -q -y \
