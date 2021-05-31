@@ -40,5 +40,6 @@
         <module>baseimage-tomcat8</module>
         <module>baseimage-apache</module>
         <module>baseimage-postfix</module>
+        <module>baseimage-chrome-headless</module>
     </modules>
 </project>
