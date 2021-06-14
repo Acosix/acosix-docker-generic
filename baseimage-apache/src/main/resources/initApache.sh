@@ -123,8 +123,9 @@ then
             fi
 
             # escape potential special characters in key / value (. and / for dot-separated keys or path values)
+            # note: & must be double escaped as regular interpolation unescapes it
             regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-            replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+            replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\\\\\&/g'`
 
             if [ -f "/etc/apache2/sites-available/${PUBLIC_HOST}.conf" ]
             then
