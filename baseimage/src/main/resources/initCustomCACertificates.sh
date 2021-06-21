@@ -17,7 +17,7 @@ then
    for file in /etc/ssl/customCACerts/*.pem
    do
       certName=`echo "$file" | cut -d '/' -f 5-`
-      if [ ! -e "/etc/ssl/certs/${certName}" ]
+      if [ -e "/etc/ssl/certs/${certName}" ]
       then
          hash=`openssl x509 -hash -noout -in "$file"`
          ln -s "/etc/ssl/certs/${certName}" /etc/ssl/certs/${hash}.0

@@ -23,7 +23,7 @@ file_env() {
 setInConfigFile() {
    local fileName="$1"
    local key="$2"
-   local value="${3:=''}"
+   local value="${3:-}"
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    # note: & must be double escaped as regular interpolation unescapes it

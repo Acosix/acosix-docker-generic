@@ -31,8 +31,6 @@ COPY initCustomJavaCACertificates.sh /etc/my_init.d/00_initCustomJavaCACertifica
 RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/java 100 \
    && update-alternatives --install /usr/bin/jjs jjs /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/jjs 100 \
    && update-alternatives --install /usr/bin/js js /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/js 100 \
-   && update-alternatives --install /usr/bin/node node /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/node 100 \
-   && update-alternatives --install /usr/bin/npm npm /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/npm 100 \
    && update-alternatives --install /usr/bin/polyglot polyglot /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/polyglot 100 \
    && update-alternatives --install /usr/bin/keytool keytool /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/keytool 100 \
    && update-alternatives --install /usr/bin/rmid rmid /usr/lib/jvm/graalvm-ce-java11-${graalvm.version}/bin/rmid 100 \

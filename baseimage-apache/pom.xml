@@ -20,15 +20,14 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-generic-parent</artifactId>
-        <version>20210319</version>
+        <version>20210621</version>
     </parent>
 
     <artifactId>baseimage-apache</artifactId>
-    <version>20210614</version>
 
     <properties>
         <docker.from.name>baseimage</docker.from.name>
-        <docker.from.version>20210319</docker.from.version>
+        <docker.from.version>${project.version}</docker.from.version>
     </properties>
 
     <build>
