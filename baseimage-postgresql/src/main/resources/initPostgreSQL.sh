@@ -50,8 +50,6 @@ PG_VERSION="$(ls -A --ignore=.* /usr/lib/postgresql)"
 if [ ! -f "/var/lib/.postgresInitDone" ]
 then
 
-   echo -e "source s_postgresql { file("/var/log/postgresql/postgresql-${PG_VERSION}-main.log" follow-freq(1)); };\nlog { source(s_postgreqsl); destination(d_stdout); };" > /etc/syslog-ng/conf.d/postgresql-ng.conf
-   
    if [[ ! -d "${PG_DATA}" ]]
    then
       mkdir -p $PG_DATA
@@ -267,6 +265,11 @@ then
    done
 
    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "${PG_DATA}/postgresql.conf"
+
+   if [[ -f "/var/log/postgresql/postgresql-${PG_VERSION}-main.log" ]]
+   then
+      cat /var/log/postgresql/postgresql-${PG_VERSION}-main.log > /proc/1/fd/1
+   fi
 
    touch "/var/lib/.postgresInitDone"
 fi
