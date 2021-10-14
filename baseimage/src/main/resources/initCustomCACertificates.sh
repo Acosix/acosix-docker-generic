@@ -20,9 +20,12 @@ then
       if [ -e "/etc/ssl/certs/${certName}" ]
       then
          hash=`openssl x509 -hash -noout -in "$file"`
-         ln -s "/etc/ssl/certs/${certName}" /etc/ssl/certs/${hash}.0
-         cat "/etc/ssl/certs/${certName}" >> /etc/ssl/certs/ca-certificates.crt
-         certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "${certName}" -i "/etc/ssl/certs/${certName}"
+         if [ ! -L  "/etc/ssl/certs/${hash}.0" ]
+         then
+            ln -s "/etc/ssl/certs/${certName}" /etc/ssl/certs/${hash}.0
+            cat "/etc/ssl/certs/${certName}" >> /etc/ssl/certs/ca-certificates.crt
+            certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "${certName}" -i "/etc/ssl/certs/${certName}"
+         fi
       fi
    done
 
