@@ -2,10 +2,13 @@
 
 set -euo pipefail
 
+# clean slate
+rm -rf /var/cache/chrome/* /home/chrome/headless/*
+
 exec /sbin/setuser chrome google-chrome \
   --no-sandbox \
   --headless \
-  --user-data-dir=/home/chrome \
+  --user-data-dir=/tmp/chrome/home/headless \
   --disk-cache-dir=/var/cache/chrome \
   --crash-dumps-dir=/tmp \
   --disable-gpu \

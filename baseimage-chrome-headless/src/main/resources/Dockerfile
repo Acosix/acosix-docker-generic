@@ -8,7 +8,7 @@ COPY startChrome.sh startDBus.sh /tmp/
 
 RUN groupadd -g 12001 chrome \
   && useradd -s /bin/false -d /home/chrome -g chrome -u 12001 -M chrome \
-  && mkdir -p /home/chrome /var/cache/chrome /etc/service/chrome /etc/service/dbus /var/run/dbus \
+  && mkdir -p /home/chrome/headless /var/cache/chrome /etc/service/chrome /etc/service/dbus /var/run/dbus \
   && chown chrome:chrome /home/chrome /var/cache/chrome \
   && mv /tmp/startChrome.sh /etc/service/chrome/run \
   && mv /tmp/startDBus.sh /etc/service/dbus/run \
