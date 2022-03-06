@@ -70,7 +70,7 @@ AUTH_PASSWORD=$(cat - | tr '\0' '\n')
 
 if [[ ! -z "$AUTH_CLIENT" && ! -z "$AUTH_CLIENT_SECRET" ]]
 then
-   tokenMatch=$(echo "$AUTH_PASSWORD" | grep --quiet -E "^[^\\.]+\\.[^\\.]+\\.[^\\.]+$")
+   tokenMatch=$(echo "$AUTH_PASSWORD" | grep -E "^[^\\.]+\\.[^\\.]+\\.[^\\.]+$" || true)
 
    if [[ ! -z "$AUTH_TOKEN_INTROSPECTION_URL" && ! -z "$AUTH_ISSUER" && "$tokenMatch" == "$AUTH_PASSWORD" ]]
    then
