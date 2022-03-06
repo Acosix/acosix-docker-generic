@@ -1,0 +1,14 @@
+# PostgreSQL PAM rules
+# rules (none by default unless configured enabled via init script)
+
+# end rules
+
+# fallback deny
+auth    requisite                       pam_deny.so
+
+# no specific handling required
+account requisite pam_permit.so
+session requisite pam_permit.so
+
+# no support for changing password
+password requisite pam_deny.so

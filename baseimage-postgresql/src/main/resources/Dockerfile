@@ -2,9 +2,11 @@ FROM ${docker.from.id}:${docker.from.version}
 
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-   && install_clean postgresql-10
+   && install_clean \
+      postgresql-10 \
+      jq
 
-COPY initPostgreSQL.sh startPostgreSQL.sh postgresql-logrotate.d /tmp/
+COPY initPostgreSQL.sh startPostgreSQL.sh postgresql-logrotate.d postgresql.pam pam-oidc.sh /tmp/
 
 RUN mv /tmp/postgresql-logrotate.d /etc/logrotate.d/postgresql \
    && mkdir -p /etc/my_init.d \
@@ -13,6 +15,9 @@ RUN mv /tmp/postgresql-logrotate.d /etc/logrotate.d/postgresql \
    && mkdir /etc/service/postgresql \
    && mv /tmp/startPostgreSQL.sh /etc/service/postgresql/run \
    && chmod +x /etc/service/postgresql/run \
+   && mv /tmp/postgresql.pam /etc/pam.d/postgresql \
+   && mv /tmp/pam-oidc.sh /usr/lib/ \
+   && chmod +x /usr/lib/pam-oidc.sh \
    && rm -rf /var/log/postgresql/postgresql-*-main.log
 
 EXPOSE 5432

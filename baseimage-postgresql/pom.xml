@@ -24,10 +24,11 @@
     </parent>
 
     <artifactId>baseimage-postgresql</artifactId>
+    <version>latest</version>
 
     <properties>
         <docker.from.name>baseimage</docker.from.name>
-        <docker.from.version>${project.version}</docker.from.version>
+        <docker.from.version>20211006</docker.from.version>
     </properties>
 
     <build>
