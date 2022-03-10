@@ -166,53 +166,31 @@ then
       if [[ $i == PG_USER_* ]]
       then
          user=$(echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-)
+         spec=$(echo $i | cut -d '=' -f 2-)
 
-         if [[ "${user}" != 'postgres' ]] && [[ "${user}" != "${PG_USER}" ]]
+         if echo "${spec}" | grep --quiet -E -i " password "; then
+            echo "User specification may not include a password - use PG_PASS_${user} / PG_PASS_${user}_FILE instead" > /proc/1/fd/1
+         elif [[ "${user}" != 'postgres' ]] && [[ "${user}" != "${PG_USER}" ]]
          then
             userPass=$(file_env "PG_PASS_${user}")
+            if [[ ! -z "${userPass}" ]]
+            then
+               PASS="PASSWORD '${userPass}'"
+            else
+               PASS=""
+            fi
 
             sqlResult=$(echo "SELECT COUNT(*) AS C FROM pg_catalog.pg_user WHERE usename = '${user}';" | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" | tail -n 3 | head -n 1 | cut -d '"' -f 2)
-            if [[ $sqlResult == '1' ]]
+            if [[ $sqlResult == '0' ]]
             then
-               if [[ ! -z "${userPass}" ]]
-               then
-                  echo "Setting/updating password for user ${user}" > /proc/1/fd/1
-                  USER_SQL="ALTER USER ${user} PASSWORD '${userPass}';"
-                  echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-
-                  if [[ "${PG_FORCE_SSL}" == true ]]
-                  then
-                     echo "hostssl all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                     echo "hostssl all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                  else
-                     echo "host all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                     echo "host all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                  fi
-               fi
-            else
-               if [[ ! -z "${userPass}" ]]
-               then
-                  PASS="PASSWORD '${userPass}'"
-               else
-                  PASS=""
-               fi
-
                echo "Creating user ${user}" > /proc/1/fd/1
-               USER_SQL="CREATE USER ${user} NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION ${PASS};"
+               USER_SQL="CREATE USER ${user} ${spec} ${PASS};"
                echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-
-               # remote access only with password
-               if [[ ! -z "${userPass}" ]]
-               then
-                  if [[ "${PG_FORCE_SSL}" == true ]]
-                  then
-                     echo "hostssl all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                     echo "hostssl all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                  else
-                     echo "host all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                     echo "host all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-                  fi
-               fi
+            elif [[ ! -z "${spec}" || ! -z "${PASS}" ]]
+            then
+               echo "Updating user ${user}" > /proc/1/fd/1
+               USER_SQL="ALTER USER ${user} ${spec} ${PASS};"
+               echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
             fi
          fi
       fi
@@ -251,10 +229,67 @@ then
             CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db}, public;"
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
          fi
+
+         userPass=$(file_env "PG_PASS_${owner}")
+         if [[ ! -z "${userPass}" ]]
+         then
+            if [[ "${PG_FORCE_SSL}" == true ]]
+            then
+               echo "hostssl ${db} ${owner} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+               echo "hostssl ${db} ${owner} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+            else
+               echo "host ${db} ${owner} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+               echo "host ${db} ${owner} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+            fi
+         fi
       fi
    done
 
-   # 3rd loop: setup extensions
+   # 3rd loop: create roles
+   IFS=$'\n'
+   for i in $(env)
+   do
+      if [[ $i == PG_ROLE_* ]]
+      then
+         role=$(echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-)
+         spec=$(echo $i | cut -d '=' -f 2-)
+
+         if echo "${spec}" | grep --quiet -E -i " password "; then
+            echo "Role specification may not include a password" > /proc/1/fd/1
+         else
+            sqlResult=$(echo "SELECT COUNT(*) AS C FROM pg_catalog.pg_roles WHERE rolname = '${role}';" | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" | tail -n 3 | head -n 1 | cut -d '"' -f 2)
+            if [[ $sqlResult == '0' ]]
+            then
+               echo "Creating role ${role}" > /proc/1/fd/1
+               ROLE_SQL="CREATE ROLE ${role} ${spec};"
+               echo ${ROLE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
+            elif [[ ! -z "${spec}" ]]
+            then
+               echo "Updating role ${role}" > /proc/1/fd/1
+               ROLE_SQL="ALTER ROLE ${role} ${spec};"
+               echo ${ROLE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
+            fi
+         fi
+      fi
+   done
+
+   # 4th loop: role memberships
+   IFS=$'\n'
+   for i in $(env)
+   do
+      if [[ $i == PG_ROLEMEMBER_* ]]
+      then
+         role=$(echo $i | cut -d '=' -f 1 | cut -d '_' -f 4-)
+         member=$(echo $i | cut -d '=' -f 2-)
+
+         echo "Ensuring ${member} is in role ${role}" > /proc/1/fd/1
+
+         ROLE_SQL="GRANT ${role} TO ${member};"
+         echo ${ROLE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
+      fi
+   done
+
+   # 5th loop: setup extensions
    IFS=$'\n'
    for i in $(env)
    do
@@ -268,18 +303,20 @@ then
             IFS=$','
             for extension in ${extensions}
             do
-               CREATE_SQL="CREATE EXTENSION IF NOT EXISTS \"$extension\";"
+               echo "Ensuring ${extension} exists in ${db}" > /proc/1/fd/1
+
+               CREATE_SQL="CREATE EXTENSION IF NOT EXISTS \"${extension}\";"
                echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
             done
          fi
       fi
    done
 
-   # 4th loop: process client access control for users
+   # 6th loop: process client access control for users
    IFS=$'\n'
    for i in $(env)
    do
-      if [[ $i == PG_USER_* ]]
+      if [[ $i == PG_USERDBACCESS_* ]]
       then
          user=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 3-)
          dbs=$(echo "$i" | cut -d '=' -f 2-)
@@ -305,54 +342,73 @@ then
       fi
    done
 
-   # 5th loop: user-db privileges
+   # 7th loop: role db privileges
    IFS=$'\n'
    for i in $(env)
    do
       if [[ $i == PG_PRIVILEGE_* ]]
       then
-         user=$(echo $i | cut -d '=' -f 1 | cut -d '_' -f 3-)
+         role=$(echo $i | cut -d '=' -f 1 | cut -d '_' -f 4-)
          db=$(echo "$i" | cut -d '=' -f 2- | cut -d ':' -f 1)
-         mode=$(echo "$i" | cut -d '=' -f 2- | cut -d ':' -f 2-)
+         mode=$(echo "$i" | cut -d '=' -f 2- | cut -d ':' -f 2)
 
-         echo "Setting up access privilege for user ${user} to ${db} in mode ${mode}" > /proc/1/fd/1
+         echo "Setting up access privilege for role ${role} to ${db} in mode ${mode}" > /proc/1/fd/1
 
-         if [ "${mode}" = 'read' ]; then
-            GRANT_SQL="GRANT CONNECT ON DATABASE ${db} TO ${user};"
+         if [[ "${mode}" = 'read' ]]
+         then
+            GRANT_SQL="GRANT CONNECT ON DATABASE ${db} TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-            GRANT_SQL="GRANT USAGE ON SCHEMA ${db} TO ${user};"
+            GRANT_SQL="GRANT USAGE ON SCHEMA ${db} TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="GRANT SELECT ON ALL SEQUENCES IN SCHEMA ${db} TO ${user};"
+            GRANT_SQL="GRANT SELECT ON ALL SEQUENCES IN SCHEMA ${db} TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="GRANT SELECT ON ALL TABLES IN SCHEMA ${db} TO ${user};"
+            GRANT_SQL="GRANT SELECT ON ALL TABLES IN SCHEMA ${db} TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
             # future object grants
-            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON TABLES TO ${user};"
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON TABLES TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON SEQUENCES TO ${user};"
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT ON SEQUENCES TO ${role};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
-         elif [ "${mode}" = 'full' -o "${mode}" = 'write' ]; then
+         elif [[ "${mode}" = 'write' ]]
+         then
+            GRANT_SQL="GRANT CONNECT ON DATABASE ${db} TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
+            GRANT_SQL="GRANT USAGE ON SCHEMA ${db} TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
+            GRANT_SQL="GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA ${db} TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
+            GRANT_SQL="GRANT SELECT, INSERT, UPDATE, TRUNCATE ON ALL TABLES IN SCHEMA ${db} TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
+
+            # future object grants
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE ON TABLES TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT SELECT, USAGE ON SEQUENCES TO ${role};"
+            echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
+
+         elif [[ "${mode}" = 'full' ]]
+         then
 
             GRANT_OPT=""
             if [ "${mode}" = 'full' ]; then
                GRANT_OPT=" WITH GRANT OPTION"
             fi
 
-            GRANT_SQL="GRANT ALL ON DATABASE ${db} TO ${user}${GRANT_OPT};"
+            GRANT_SQL="GRANT ALL ON DATABASE ${db} TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-            GRANT_SQL="GRANT ALL ON SCHEMA ${db} TO ${user}${GRANT_OPT};"
+            GRANT_SQL="GRANT ALL ON SCHEMA ${db} TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="GRANT ALL ON ALL SEQUENCES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
+            GRANT_SQL="GRANT ALL ON ALL SEQUENCES IN SCHEMA ${db} TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="GRANT ALL ON ALL TABLES IN SCHEMA ${db} TO ${user}${GRANT_OPT};"
+            GRANT_SQL="GRANT ALL ON ALL TABLES IN SCHEMA ${db} TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
 
             # future object grants
-            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON TABLES TO ${user}${GRANT_OPT};"
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON TABLES TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
-            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON SEQUENCES TO ${user}${GRANT_OPT};"
+            GRANT_SQL="ALTER DEFAULT PRIVILEGES IN SCHEMA ${db} GRANT ALL ON SEQUENCES TO ${role}${GRANT_OPT};"
             echo ${GRANT_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
          fi
       fi
