@@ -9,7 +9,7 @@ RUN apt-get update \
       wget \
       zip \
       unzip \
-      bsdtar \
+      libarchive-tools \
       lsof \
       libnss3-tools \
   && apt-get autoremove -y

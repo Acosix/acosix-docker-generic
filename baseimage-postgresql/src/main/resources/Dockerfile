@@ -1,9 +1,9 @@
 FROM ${docker.from.id}:${docker.from.version}
 
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ focal-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
    && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
    && install_clean \
-      postgresql-10 \
+      postgresql-14 \
       jq
 
 COPY initPostgreSQL.sh startPostgreSQL.sh postgresql-logrotate.d postgresql.pam pam-oidc.sh /tmp/

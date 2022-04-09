@@ -1,13 +1,10 @@
 FROM ${docker.from.id}:${docker.from.version}
 
 RUN apt-get update \
-   && apt-get install -y software-properties-common \
-   && add-apt-repository universe \
-   && add-apt-repository -y ppa:certbot/certbot \
    && install_clean \
       apache2 \
       certbot \
-      python-certbot-apache
+      python3-certbot-apache
 
 RUN openssl dhparam -dsaparam -out /etc/ssl/certs/dhparam.pem 4096
 

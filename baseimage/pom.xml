@@ -20,14 +20,13 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-generic-parent</artifactId>
-        <version>20211006</version>
+        <version>20220409</version>
     </parent>
 
     <artifactId>baseimage</artifactId>
 
     <properties>
         <docker.pull>false</docker.pull>
-        <phusion.baseimage.version>18.04-1.0.0-amd64</phusion.baseimage.version>
     </properties>
 
     <build>

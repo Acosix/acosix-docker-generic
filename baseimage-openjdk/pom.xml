@@ -20,7 +20,7 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-generic-parent</artifactId>
-        <version>20211006</version>
+        <version>20220409</version>
     </parent>
 
     <artifactId>baseimage-openjdk</artifactId>
@@ -46,7 +46,7 @@
                     <artifactId>docker-maven-plugin</artifactId>
                     <configuration>
                         <images>
-                        <!-- actually build two variant images with different Java versions -->
+                        <!-- actually build variant images with different Java versions -->
                             <image>
                                 <name>${docker.image.organisation}/baseimage-java8-openjdk</name>
                                 <build>
@@ -61,6 +61,19 @@
                                     <contextDir>${project.build.directory}/ImageBuild</contextDir>
                                     <args>
                                         <jvmVersion>11</jvmVersion>
+                                    </args>
+                                    <tags>
+                                        <tag>latest</tag>
+                                        <tag>${project.version}</tag>
+                                    </tags>
+                                </build>
+                            </image>
+                            <image>
+                                <name>${docker.image.organisation}/baseimage-java17-openjdk</name>
+                                <build>
+                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
+                                    <args>
+                                        <jvmVersion>17</jvmVersion>
                                     </args>
                                     <tags>
                                         <tag>latest</tag>

@@ -40,9 +40,7 @@ setInConfigFile() {
 PG_DATA=${PG_DATA:-/srv/postgresql/data}
 PG_INIT_SCRIPTS=${PG_INIT_SCRIPTS:-/srv/postgresql/init}
 
-# these are only for the root / main admin user
-PG_USER=${PG_USER:-postgres}
-PG_DB=${PG_USER:=${PG_USER}}
+# these are only for the postgres admin user
 PG_PASS=$(file_env PG_PASS)
 
 if [[ ! -z "${PG_PASS}" ]]
@@ -69,7 +67,6 @@ then
    chown -R postgres:postgres $PG_DATA
    chmod 0700 $PG_DATA
 
-   # TODO Support version upgrade
    if [[ -z "$(ls -A "${PG_DATA}")" ]]
    then
       su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/initdb -D ${PG_DATA}"
@@ -77,42 +74,10 @@ then
       cp "${PG_DATA}/postgresql.conf" "${PG_DATA}/postgresql.conf.default"
       cp "${PG_DATA}/pg_hba.conf" "${PG_DATA}/pg_hba.conf.default"
 
-      if [[ "${PG_USER}" != 'postgres' ]]
-      then
-         echo "Creating user ${PG_USER}" > /proc/1/fd/1
-         USER_SQL="CREATE USER ${PG_USER} WITH SUPERUSER ${PASS};"
-         echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-      fi
-
-      if [[ "${PG_DB}" != 'postgres' ]]
-      then
-         echo "Creating database ${PG_DB}" > /proc/1/fd/1
-         CREATE_SQL="CREATE DATABASE ${PG_DB} ENCODING = 'UTF8' OWNER = ${PG_USER};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-         CREATE_SQL="CREATE SCHEMA ${PG_DB} AUTHORIZATION ${PG_USER};"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${PG_DB}" > /dev/null
-         CREATE_SQL="ALTER DATABASE ${PG_DB} SET search_path TO ${PG_DB}, public;"
-         echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-      fi
-
       PERM_SQL='REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM public;'
       echo ${PERM_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" template1 > /dev/null
       PERM_SQL='REVOKE USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public FROM public;'
       echo ${PERM_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" template1 > /dev/null
-
-      mkdir -p ${PG_INIT_SCRIPTS}
-      if [[ -n "$(ls -A "${PG_INIT_SCRIPTS}")" ]]
-      then
-         su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -l /var/log/postgresql/postgresql-${PG_VERSION}-main.log -o \"-c listen_addresses=''\" -w start"
-
-         echo "Running any database initialisation scripts" > /proc/1/fd/1
-         for script in ${PG_INIT_SCRIPTS}/*.sql
-         do
-            "/usr/lib/postgresql/${PG_VERSION}/bin/psql" --username "${PG_USER}" --dbname "${PG_DB}" < "$script"
-         done
-
-         su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/pg_ctl -D ${PG_DATA} -m fast -w stop"
-      fi
    fi
 
    # Reset config so any previous PGCONF_* based settings no longer present are reset
@@ -145,17 +110,17 @@ then
    # Update main user's password
    if [[ ! -z "$PG_PASS" ]]
    then
-      echo "Setting/updating password for user ${PG_USER}" > /proc/1/fd/1
-      USER_SQL="ALTER USER ${PG_USER} WITH SUPERUSER ${PASS};"
+      echo "Setting/updating password for postgres user" > /proc/1/fd/1
+      USER_SQL="ALTER USER postgres WITH SUPERUSER ${PASS};"
       echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
 
       if [[ "${PG_FORCE_SSL}" == true ]]
       then
-         echo "hostssl all ${PG_USER} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-         echo "hostssl all ${PG_USER} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+         echo "hostssl all postgres 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+         echo "hostssl all postgres ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
       else
-         echo "host all ${PG_USER} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-         echo "host all ${PG_USER} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+         echo "host all postgres 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+         echo "host all postgres ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
       fi
    fi
 
@@ -170,7 +135,7 @@ then
 
          if echo "${spec}" | grep --quiet -E -i " password "; then
             echo "User specification may not include a password - use PG_PASS_${user} / PG_PASS_${user}_FILE instead" > /proc/1/fd/1
-         elif [[ "${user}" != 'postgres' ]] && [[ "${user}" != "${PG_USER}" ]]
+         elif [[ "${user}" != 'postgres' ]]
          then
             userPass=$(file_env "PG_PASS_${user}")
             if [[ ! -z "${userPass}" ]]
