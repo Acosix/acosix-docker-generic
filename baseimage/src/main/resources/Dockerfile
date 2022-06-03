@@ -1,7 +1,9 @@
 FROM phusion/baseimage:${phusion.baseimage.version}
 
+# Fix syslog version (https://github.com/phusion/baseimage-docker/pull/615)
 # Add tools that are commonly used in sub-images
-RUN apt-get update \
+RUN sed -i 's/version: 3.25/version: 3.35/' /etc/syslog-ng/syslog-ng.conf \
+  && apt-get update \
   && apt-get dist-upgrade -y \
   && install_clean \
       inetutils-ping \

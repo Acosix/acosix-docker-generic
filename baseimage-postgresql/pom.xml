@@ -20,7 +20,7 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-generic-parent</artifactId>
-        <version>20220409</version>
+        <version>20220603</version>
     </parent>
 
     <artifactId>baseimage-postgresql</artifactId>

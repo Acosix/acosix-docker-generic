@@ -11,7 +11,7 @@ RUN wget -O /tmp/tomcat.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v
       gcc \
       libapr1 \
       libaprutil1 \
-      libssl1.1 \
+      libssl3 \
       libapr1-dev \
       libaprutil1-dev \
       libssl-dev \

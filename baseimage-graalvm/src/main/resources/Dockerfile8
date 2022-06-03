@@ -3,6 +3,7 @@ FROM ${docker.from.id}:${docker.from.version}
 ARG jvmVersion=8
 
 # Download and setup GraalVM Community (trimming it down somewhat since it is huuge)
+# GraalVM stopped updating Java 8 build after 21.3.1
 RUN wget -O /tmp/graalvm-ce-java8-21.3.1.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.3.1/graalvm-ce-java8-linux-amd64-21.3.1.tar.gz \
    && bsdtar xzf /tmp/graalvm-ce-java8-21.3.1.tar.gz \
    && mkdir -p /usr/lib/jvm  \
