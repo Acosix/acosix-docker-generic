@@ -157,6 +157,18 @@ then
                USER_SQL="ALTER USER ${user} ${spec} ${PASS};"
                echo ${USER_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
             fi
+
+            if [[ ! -z "${userPass}" ]]
+         	then
+               if [[ "${PG_FORCE_SSL}" == true ]]
+               then
+                  echo "hostssl all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+                  echo "hostssl all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+               else
+                  echo "host all ${user} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+                  echo "host all ${user} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
+               fi
+            fi
          fi
       fi
    done
@@ -193,19 +205,6 @@ then
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA} ${db}" > /dev/null
             CREATE_SQL="ALTER DATABASE ${db} SET search_path TO ${db}, public;"
             echo ${CREATE_SQL} | su postgres -c "/usr/lib/postgresql/${PG_VERSION}/bin/postgres --single -j -D ${PG_DATA}" > /dev/null
-         fi
-
-         userPass=$(file_env "PG_PASS_${owner}")
-         if [[ ! -z "${userPass}" ]]
-         then
-            if [[ "${PG_FORCE_SSL}" == true ]]
-            then
-               echo "hostssl ${db} ${owner} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-               echo "hostssl ${db} ${owner} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-            else
-               echo "host ${db} ${owner} 0.0.0.0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-               echo "host ${db} ${owner} ::0/0 scram-sha-256" >> "${PG_DATA}/pg_hba.conf"
-            fi
          fi
       fi
    done
