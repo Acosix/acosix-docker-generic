@@ -20,7 +20,7 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-generic-parent</artifactId>
-        <version>20220603</version>
+        <version>20260812</version>
     </parent>
 
     <artifactId>baseimage-openjdk</artifactId>
@@ -29,79 +29,4 @@
         <docker.from.name>baseimage</docker.from.name>
         <docker.from.version>${project.version}</docker.from.version>
     </properties>
-
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <targetPath>${project.build.directory}/ImageBuild</targetPath>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>io.fabric8</groupId>
-                    <artifactId>docker-maven-plugin</artifactId>
-                    <configuration>
-                        <images>
-                        <!-- actually build variant images with different Java versions -->
-                            <image>
-                                <name>${docker.image.organisation}/baseimage-java8-openjdk</name>
-                                <build>
-                                    <args>
-                                        <jvmVersion>8</jvmVersion>
-                                    </args>
-                                </build>
-                            </image>
-                            <image>
-                                <name>${docker.image.organisation}/baseimage-java11-openjdk</name>
-                                <build>
-                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
-                                    <args>
-                                        <jvmVersion>11</jvmVersion>
-                                    </args>
-                                    <tags>
-                                        <tag>latest</tag>
-                                        <tag>${project.version}</tag>
-                                    </tags>
-                                </build>
-                            </image>
-                            <image>
-                                <name>${docker.image.organisation}/baseimage-java17-openjdk</name>
-                                <build>
-                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
-                                    <args>
-                                        <jvmVersion>17</jvmVersion>
-                                    </args>
-                                    <tags>
-                                        <tag>latest</tag>
-                                        <tag>${project.version}</tag>
-                                    </tags>
-                                </build>
-                            </image>
-                        </images>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

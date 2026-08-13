@@ -1,9 +1,9 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.registry.pull.prefix}${docker.from.id}:${docker.from.version}
 
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
-   && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ resolute-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+   && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | tee /etc/apt/trusted.gpg.d/postgresql.asc \
    && install_clean \
-      postgresql-14 \
+      postgresql-18 \
       jq
 
 COPY initPostgreSQL.sh startPostgreSQL.sh postgresql-logrotate.d postgresql.pam pam-oidc.sh /tmp/

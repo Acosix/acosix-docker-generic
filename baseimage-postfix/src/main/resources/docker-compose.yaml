@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+
+   postfix:
+      image: ${docker.registry.push.prefix}${docker.image.id}:latest
+      build:
+         context: ./
+         dockerfile: Dockerfile

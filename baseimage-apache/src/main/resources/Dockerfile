@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.registry.pull.prefix}${docker.from.id}:${docker.from.version}
 
 RUN apt-get update \
    && install_clean \

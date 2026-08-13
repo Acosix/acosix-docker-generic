@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.registry.pull.prefix}${docker.from.id}:${docker.from.version}
 
 # need to set a dummy mailname now (must be overriden via initPostfix.sh + env variables) so unattended install works
 RUN echo "postfix postfix/mailname string example.com" | debconf-set-selections \

@@ -20,8 +20,11 @@
       RequestHeader set "X-Forwarded-SSL" expr=%{HTTPS}
 
       # ensure Secure and SameSite are set
+      # (very lax handling only for special cookies in Keycloak exchange)
       Header edit Set-Cookie (.*) "$1; Secure"
-      Header edit Set-Cookie (.*) "$1; SameSite=strict"
+      Header edit Set-Cookie ^OAuth_Token_Request_State=(.*) "$1; SameSite=None"
+      Header edit Set-Cookie ^JSESSIONID=(.*) "$1; SameSite=None"
+      Header edit Set-Cookie (.*) "$1; SameSite=Strict"
 
       # cleanup any doubled settings if backend already provided cookies with Secure and/or SameSite - first (original) SameSite wins
       Header edit Set-Cookie ^(.*);\s?Secure(;.*)?;\s?Secure(;.*)?$ "$1$2$3; Secure"

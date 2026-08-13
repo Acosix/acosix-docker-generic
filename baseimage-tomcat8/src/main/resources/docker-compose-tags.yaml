@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+
+   tomcat-opendjdk8:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java8-openjdk:${project.version}
+      build:
+         context: ./
+         dockerfile: Dockerfile-openjdk8
+
+   tomcat-opendjdk11:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java11-openjdk:${project.version}
+      build:
+         context: ./
+         dockerfile: Dockerfile-openjdk11
+
+   tomcat-graalvm8:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java8-graalvm:${project.version}
+      build:
+         context: ./
+         dockerfile: Dockerfile-graalvm8
+
+   tomcat-graalvm11:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java11-graalvm:${project.version}
+      build:
+         context: ./
+         dockerfile: Dockerfile-graalvm11

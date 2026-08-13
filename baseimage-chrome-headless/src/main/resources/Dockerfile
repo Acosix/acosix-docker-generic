@@ -1,6 +1,6 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.registry.pull.prefix}${docker.from.id}:${docker.from.version}
 
-RUN curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+RUN curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub | tee /etc/apt/trusted.gpg.d/google.asc \
   && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | tee -a /etc/apt/sources.list.d/google.list \
   && install_clean google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 dbus
 

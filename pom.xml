@@ -20,17 +20,16 @@
     <parent>
         <groupId>de.acosix.docker</groupId>
         <artifactId>acosix-docker-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
     </parent>
 
-    <version>20220603</version>
+    <version>20260812</version>
     <artifactId>acosix-docker-generic-parent</artifactId>
     <packaging>pom</packaging>
 
     <properties>
-        <phusion.baseimage.version>jammy-1.0.0</phusion.baseimage.version>
-        <graalvm.version>22.1.0</graalvm.version>
-        <dep.tomcat.version>8.5.79</dep.tomcat.version>
+        <phusion.baseimage.version>resolute-1.0.11</phusion.baseimage.version>
+        <dep.tomcat.version>8.5.100</dep.tomcat.version>
     </properties>
 
     <modules>

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+
+   opendjdk-java8:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java8:latest
+      build:
+         context: ./
+         dockerfile: Dockerfile8
+
+   opendjdk-java11:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java11:latest
+      build:
+         context: ./
+         dockerfile: Dockerfile11
+
+   opendjdk-java17:
+      image: ${docker.registry.push.prefix}${docker.image.id}-java17:latest
+      build:
+         context: ./
+         dockerfile: Dockerfile17

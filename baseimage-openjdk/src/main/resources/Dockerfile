@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.registry.pull.prefix}${docker.from.id}:${docker.from.version}
 
 ARG jvmVersion=8
 

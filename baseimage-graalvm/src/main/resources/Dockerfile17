@@ -1,15 +1,16 @@
 FROM ${docker.from.id}:${docker.from.version}
 
-ARG jvmVersion=8
+ARG GRAALVM_VERSION=17.0.9
 
 # Download and setup GraalVM Community (trimming it down somewhat since it is huuge)
-RUN wget -O /tmp/graalvm-ce-java17-${graalvm.version}.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm.version}/graalvm-ce-java17-linux-amd64-${graalvm.version}.tar.gz \
-   && bsdtar xzf /tmp/graalvm-ce-java17-${graalvm.version}.tar.gz \
-   && mkdir -p /usr/lib/jvm  \
-   && mv /graalvm-ce-java17-${graalvm.version} /usr/lib/jvm/ \
-   && rm /tmp/graalvm-ce-java17-${graalvm.version}.tar.gz \
-   && find /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/ -iname src.zip -delete \
-   && find /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/ -iname *.src.zip -delete
+# GraalVM changed release artifacts structure after tag vm-22.3.3
+RUN wget -O /tmp/graalvm-ce-java17-${GRAALVM_VERSION}.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAALVM_VERSION}/graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz \
+   && bsdtar xzf /tmp/graalvm-ce-java17-${GRAALVM_VERSION}.tar.gz \
+   && mkdir -p /usr/lib/jvm \
+   && mv /graalvm-community-openjdk-${GRAALVM_VERSION}* /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION} \
+   && rm /tmp/graalvm-ce-java17-${GRAALVM_VERSION}.tar.gz \
+   && find /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/ -iname src.zip -delete \
+   && find /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/ -iname *.src.zip -delete
 
 # TODO Find more ways to strip it down, alternatively build from source with optimisation for size
    
@@ -20,30 +21,27 @@ RUN install_clean \
       gcc \
       zlib1g-dev \
    && equivs-build /tmp/graalvm-ce-java17 \
-   && dpkg -i /graalvm-ce-java11_${graalvm.version}_all.deb \
+   && dpkg -i /graalvm-ce-java17_${GRAALVM_VERSION}_all.deb \
    && apt-get autoremove -q -y equivs \
-   && rm /graalvm-ce-java11_${graalvm.version}_all.deb \
+   && rm /graalvm-ce-java17_${GRAALVM_VERSION}_all.deb \
    && rm /tmp/graalvm-ce-java17
 
 # Only the most commonly used executables are added to the alternatives system
 # no manpage files in java17 build + slightly different binary paths than for java8
 COPY initCustomJavaCACertificates.sh /etc/my_init.d/00_initCustomJavaCACertificates.sh
-RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/java 100 \
-   && update-alternatives --install /usr/bin/jjs jjs /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/jjs 100 \
-   && update-alternatives --install /usr/bin/js js /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/js 100 \
-   && update-alternatives --install /usr/bin/polyglot polyglot /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/polyglot 100 \
-   && update-alternatives --install /usr/bin/keytool keytool /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/keytool 100 \
-   && update-alternatives --install /usr/bin/rmid rmid /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/rmid 100 \
-   && update-alternatives --install /usr/bin/rmiregistry rmiregistry /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/rmiregistry 100 \
-   && update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/javac 100 \
-   && update-alternatives --install /usr/bin/javap javap /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/javap 100 \
-   && update-alternatives --install /usr/bin/jstack jstack /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/jstack 100 \
-   && update-alternatives --install /usr/bin/jmap jmap /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/jmap 100 \
-   && update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/jar 100 \
-   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/bin/javadoc 100 \
+RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/java 100 \
+   && update-alternatives --install /usr/bin/polyglot polyglot /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/polyglot 100 \
+   && update-alternatives --install /usr/bin/keytool keytool /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/keytool 100 \
+   && update-alternatives --install /usr/bin/rmiregistry rmiregistry /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/rmiregistry 100 \
+   && update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/javac 100 \
+   && update-alternatives --install /usr/bin/javap javap /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/javap 100 \
+   && update-alternatives --install /usr/bin/jstack jstack /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/jstack 100 \
+   && update-alternatives --install /usr/bin/jmap jmap /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/jmap 100 \
+   && update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/jar 100 \
+   && update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/bin/javadoc 100 \
    && mkdir -p /etc/ssl/certs/java \
-   && mv /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/lib/security/cacerts /etc/ssl/certs/java/ \
-   && ln -s /etc/ssl/certs/java/cacerts /usr/lib/jvm/graalvm-ce-java17-${graalvm.version}/lib/security/cacerts \
+   && mv /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/lib/security/cacerts /etc/ssl/certs/java/ \
+   && ln -s /etc/ssl/certs/java/cacerts /usr/lib/jvm/graalvm-ce-java17-${GRAALVM_VERSION}/lib/security/cacerts \
    && chmod +x /etc/my_init.d/00_initCustomJavaCACertificates.sh
 
 LABEL vendor="${docker.labels.vendor}" \
